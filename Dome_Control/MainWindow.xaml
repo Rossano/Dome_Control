@@ -1,0 +1,208 @@
+﻿<Window x:Class="Dome_Control.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ProjectProperties="clr-namespace:Dome_Control.Properties"
+        xmlns:local="clr-namespace:Dome_Control"        
+        Title="MainWindow" Height="350" Width="450" MinHeight="540" MinWidth="500" SizeChanged="Window_SizeChanged"
+            mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" d:DesignHeight="588" d:DesignWidth="819" 
+            SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Icon="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/ARA2.ico">
+    <!-- Command Binding Definition for Custom commands -->
+    <Window.CommandBindings>
+        <!-- Help Command Binding-->
+        <CommandBinding Command="Help" Executed="Help_Executed" />
+        <!-- Bind Close Command -->
+        <CommandBinding Command="Close" Executed="Close_Executed" />
+        <!-- Com Options Command -->
+        <!--<CommandBinding Command="COM_Options" Executed="COM_Option_Executed" />-->
+    </Window.CommandBindings>
+
+    <Window.Resources>
+
+    </Window.Resources>
+    <Grid Height="Auto">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition MinWidth="450" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="auto" />
+            <!--<RowDefinition Height="0" />-->
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <!-- Menu Definition -->
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <!-- File Menu -->
+            <MenuItem Name="MenuItemFileName" x:Uid="MenuItemFileName" Header="Item 1">
+                <MenuItem  x:Uid="MenuItemExitName" Name="MenuItemExitName" Command="Close" Header="Item 1.1"/>
+                <Separator />
+                <MenuItem Name="NewFWLabel" x:Uid="NewFWLabel" Header="Item 1.2" Click="NewFW_Click"/>
+                <MenuItem Name="DebugLabel" x:Uid="DebugLabel" Header="Item 1.3" Click="Debug_Click"/>
+            </MenuItem>
+            <!-- Options Menu -->
+            <MenuItem Header="Item 2" Name="MenuItemOptionsName" x:Uid="MenuItemOptionsName">
+                <!--<MenuItem Header="Item 2.1" Name="COM_Options" x:Uid="COM_Options" Click="COM_Option_Executed"/>-->
+                <!--Command="COM_Options" />-->
+                <!--<MenuItem Header="Item 2.2" Name="GraphOptions" x:Uid="GraphOptions" Click="GraphOptions_Click"/>
+                <Separator/>
+                <MenuItem Header="Item 2.3" Name="PID_Options" x:Uid="PID_Options" Click="PID_Options_Click" />-->-->
+            </MenuItem>
+            <!-- Help Menu -->
+            <MenuItem HorizontalAlignment="Right" Header="Item 3" Name="HelpMenuItemName">
+                <MenuItem Header="Item 3.1" Name="HelpMenu" x:Uid="HelpMenu" Click="HelpMenu_Click" />
+                <Separator/>
+                <MenuItem Header="Item 3.2" Name="AboutItem" x:Uid="AboutItem" Click="AboutItem_Click" />
+            </MenuItem>
+
+        </Menu>
+        <TabControl Name="MainTab" Grid.Column="1" MinHeight="450" Margin="0,0,0,2"> <!--Grid.Row="1"-->
+            <TabItem Name="RunTab">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Vertical" MinWidth="300">
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="DomePositionLabel" Width="100"/>
+                            <Label Name="DomePosition" Width="100" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="TelescopeLabel" Width="100" />
+                            <Label Name="TelescopePos" Width="100" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="AngleDiffLabel" Width="100" />
+                            <Label Name="AngleDiff" Width="100" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Vertical">                             
+                    <Border Margin="5" BorderThickness="5" CornerRadius="5" BorderBrush="Gray">
+                        <StackPanel Orientation="Vertical">
+                            <Label Name="SingleDomeControl" Content="Continuous Turn" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Name="SingleDomeControl_Left" Margin="03" Height="55" Width="55" MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp">
+                                    <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" />                                        
+                                </Button>
+                                <Button Name="SingleDomeControl_Right" Margin="3" MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp">
+                                    <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                        <Border Margin="5" BorderThickness="5" CornerRadius="5" BorderBrush="Gray">
+                            <StackPanel Orientation="Vertical">
+                                <Label Name="MultipleDomeConstrol" Content="Multiple Step Control" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Name="MultiDomeControl_Left" Margin="3" Height="55" Width="55" Click="MultiDomeControl_Left_Click">
+                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" />
+                                    </Button>
+                                    <Button Name="MultiDomeControl_Right" Margin="3" Height="55" Width="55" Click="MultiDomeControl_Right_Click">
+                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png" />
+                                    </Button>
+                                    
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>                    
+                </StackPanel>
+            </TabItem>
+            <TabItem Name="ControlTab" >
+                <GroupBox Name="Connection_Box" MinWidth="430" MinHeight="450">
+                    <StackPanel Margin="5" Orientation="Vertical" Height="Auto" >
+                        <StackPanel Margin="5" Orientation="Horizontal" Height="Auto">
+                            <Label Margin="5" Name="COMPort_Label">COM Port</Label>
+                            <ComboBox Name="AVRCOMListBox" MinWidth="70" Margin="5" SelectionChanged="AVRCOMListBox_SelectionChanged" />
+                            <Label Margin="5">Baudrate</Label>
+                            <ComboBox Margin="5" Name="AVRBaudrateListBox" MinWidth="65" 
+                                                          SelectionChanged="AVRBaudrateListBox_SelectionChanged" SelectedIndex="0">
+                                <ComboBoxItem>9600</ComboBoxItem>
+                                <ComboBoxItem>19200</ComboBoxItem>
+                                <ComboBoxItem>38400</ComboBoxItem>
+                                <ComboBoxItem>56600</ComboBoxItem>
+                                <ComboBoxItem>115200</ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Margin="10" Orientation="Horizontal">
+                            <GroupBox Header="Parity" Margin="5" Width="100">
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton Name="AVRParity_None" IsChecked="True" Click="AVRParity_None_Click">None</RadioButton>
+                                    <RadioButton Name="AVRParity_Even" Click="AVRParity_Even_Click">Even</RadioButton>
+                                    <RadioButton Name="AVRParity_Odd" Click="AVRParity_Odd_Click">Odd</RadioButton>
+                                    <RadioButton Name="AVRParity_Mark" Click="AVRParity_Mark_Click">Mark</RadioButton>
+                                    <RadioButton Name="AVRParity_Space" Click="AVRParity_Space_Click">Space</RadioButton>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="StopBits" Margin="5" Width="100">
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton Name="AVRStopbitNone" Click="AVRStopbitNone_Click">None</RadioButton>
+                                    <RadioButton Name="AVRStopbit1" IsChecked="True" Click="AVRStopbit1_Click">1</RadioButton>
+                                    <RadioButton Name="AVRStopbit15" Click="AVRStopbit15_Click">1.5</RadioButton>
+                                    <RadioButton Name="AVRStopbit2" Click="AVRStopbit2_Click">2</RadioButton>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="Handshake" Margin="5" Width="110">
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton Name="AVRHandshake_None" IsChecked="True" Click="AVRHandshake_None_Click">None</RadioButton>
+                                    <RadioButton Name="AVRHandshake_RTS" Click="AVRHandshake_RTS_Click">RTS</RadioButton>
+                                    <RadioButton Name="AVRHandshake_RTSX" Click="AVRHandshake_RTSX_Click">RTS XOn/XOff</RadioButton>
+                                    <RadioButton Name="AVRHandshake_XonXoff" Click="AVRHandshake_XonXoff_Click">XOn / XOff</RadioButton>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                        <Button Margin="10" Name="AVRConnectButton" Click="AVRConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70" />
+                        <Image Name="TestImage" Margin="130,30,72,72" Stretch="Uniform"  Source="{Binding Path=StatusBar_Image}" DataContext="{Binding}" />
+                        <Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>
+                    </StackPanel>
+                </GroupBox>
+            </TabItem>
+            <!--<TabItem Name="TunTab" Grid.Row="1" MinHeight="450"> 
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Vertical" MinWidth="300">
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="PositionLabel" Width="100"/>    
+                            <Label Name="DomePosition" Width="100" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="TelescopeLabel" Width="100" />
+                            <Label Name="TelescopePos" Width="100" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="300">
+                            <Label Name="AngleDiffLabel" Width="100" />
+                            <Label Name="AngleDiff" Width="100" />
+                        </StackPanel>
+                    </StackPanel>
+                    
+                </StackPanel>            
+            </TabItem>-->
+        </TabControl>
+        <StatusBar Height="30" Name="MainWindowStatusBar" Grid.ColumnSpan="2" Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,0">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30" />
+                        </Grid.RowDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem Grid.Column="0">
+                <Image Margin="10,5,10,10" Name="ConnectionImage" x:Uid="ConnectionImage" Stretch="Uniform" />
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1">
+                <Label Name="ConnectionStatusLabel" x:Uid="StatusBar_Disconneted" MinHeight="30" Content="Test"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="2" >
+                <Border >
+                    <Label x:Uid="StatusBar_Version" Name="StatusBar_Version" Content="Ver" FontSize="10"/>
+                </Border>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

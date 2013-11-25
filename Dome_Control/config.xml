@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<config>
+  <AVR>
+    <COM>COM19</COM>
+    <Baudrate>9600</Baudrate>
+    <Databits>8</Databits>
+    <Stopbits>One</Stopbits>
+    <Parity>None</Parity>
+    <Handshake>None</Handshake>
+    <Arduino>Yes</Arduino>
+    <Arduino_Bootloader>No</Arduino_Bootloader>
+    <AVR_BootLoader_COM>COM7</AVR_BootLoader_COM>
+  </AVR>
+  <Language>English</Language>
+  <Graph>
+    
+  </Graph>
+</config>

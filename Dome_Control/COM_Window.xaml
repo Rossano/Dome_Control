@@ -1,0 +1,48 @@
+﻿<Window x:Class="Peltier_GUI.COM_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settaggi Porta COM" Height="330" Width="220">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <GroupBox Grid.Column="0" Grid.Row="0" Header="Parità" Margin="5">
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="EvenParityRB" Checked="EvenParityRB_Checked">Pari</RadioButton>
+                <RadioButton Margin="5" Name="OddParityRB" Checked="OddParityRB_Checked">Dispari</RadioButton>
+                <RadioButton Margin="5" Name="NoneParityRB" Checked="NoneParityRB_Checked">Nessuna</RadioButton>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Column="1" Grid.Row="0" Header="Baudrate" Margin="5">
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="baud9600RB" Checked="baud9600RB_Checked">9 600</RadioButton>
+                <RadioButton Margin="5" Name="baud14200RB" Checked="baud14200RB_Checked">14 200</RadioButton>
+                <RadioButton Margin="5" Name="baud19200RB" Checked="baud19200RB_Checked">19 200</RadioButton>
+                <RadioButton Margin="5" Name="baud28800RB" Checked="baud28800RB_Checked">28 800</RadioButton>
+                <RadioButton Margin="5" Name="baud57600RB" Checked="baud57600RB_Checked">57 600</RadioButton>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Column="1" Grid.Row="1" Header="Handshake" Margin="5">
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="NoneHandshakeRB" Checked="NoneHandshakeRB_Checked">None</RadioButton>
+                <RadioButton Margin="5" Name="XONXOFFHandshakeRB" Checked="XONXOFFHandshakeRB_Checked">XON / XOFF</RadioButton>                
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Column="0" Grid.Row="1" Header="Stop Bits" Margin="5">
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="StopBitORB" Checked="StopBitORB_Checked">0 bits</RadioButton>
+                <RadioButton Margin="5" Name="StopBit1RB" Checked="StopBit1RB_Checked">1 bit</RadioButton>
+                <RadioButton Margin="5" Name="StopBit1_5RB" Checked="StopBit1_5RB_Checked">1.5 bits</RadioButton>
+                <RadioButton Margin="5" Name="StopBits2RB" Checked="StopBits2RB_Checked">2 bits</RadioButton>
+            </StackPanel>
+        </GroupBox>
+        <Button Grid.Column="0" Grid.Row="2" Name="OKButton" Click="OKButton_Click">OK</Button>
+        <Button Grid.Column="1" Grid.Row="2" Name="CancelButton" Click="CancelButton_Click">Cancel</Button>        
+    </Grid>
+</Window>

@@ -1,0 +1,23 @@
+﻿<Window x:Class="Dome_Control.NewFW_Download_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NewFW_Download_Window" Height="230" Width="450" x:Uid="DownloadWindowName">
+    <Grid>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Margin="5,15,5,15" >
+                <Label x:Uid="LoadNewFWLabel" Name="LoadNewFWLabel" />
+                <TextBox Width="200" Name="FWFilenameTextBox"/>
+                <Button x:Uid="NewFWLoadButton" Name="NewFWLoadButton" Width="70" Click="NewFWLoadButton_Click"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5,15,5,15" HorizontalAlignment="Center">
+                <Label x:Uid="BootloaderCOMLabel" Name="BootloaderComLabel" />
+                <ComboBox Name="BootloadCOMComboBox" Width="70" SelectionChanged="BootloadCOMComboBox_SelectionChanged" />
+            </StackPanel>
+            <CheckBox Name="ArduinoBootloader_CheckBox" HorizontalAlignment="Center" Click="ArduinoBootloader_CheckBox_Click">Arduino Bootloader</CheckBox>
+            <StackPanel Orientation="Horizontal" Margin="5,15,5,15" HorizontalAlignment="Center">
+                <Button x:Uid="DownloadButton" Name="DownloadButton" Width="70" Click="DownloadButton_Click" Margin="0,0,20,0"/>
+                <Button x:Uid="CancelDownloadButton" Name="CancelDownloadButton" Width="70" Click="CancelDownloadButton_Click" Margin="20,0,0,0"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>
