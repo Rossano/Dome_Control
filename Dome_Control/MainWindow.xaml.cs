@@ -242,7 +242,7 @@ namespace Dome_Control
                 //
                 if (((App)(System.Windows.Application.Current))._Dome_uC == null)
                 {
-                    ((App)(System.Windows.Application.Current))._Dome_uC = new ArduinoDome_ns.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
+                    ((App)(System.Windows.Application.Current))._Dome_uC = new Arduino.Dome.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
                 }
                 //
                 //  Read the Firmware Versions and show it on a MessageBox

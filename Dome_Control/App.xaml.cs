@@ -4,7 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
-using ArduinoDome_ns;
+using Arduino.Dome;
 
 namespace Dome_Control
 {

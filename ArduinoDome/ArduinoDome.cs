@@ -9,7 +9,7 @@ using AVR_Device;
 using System.Threading;
 using System.Windows.Threading;
 
-namespace ArduinoDome_ns
+namespace Arduino.Dome
 {
     /// <summary>
     /// Message Data Structure
@@ -21,6 +21,15 @@ namespace ArduinoDome_ns
     }
 
     /// <summary>
+    /// Enumerator data structure to select the slewing direction
+    /// </summary>
+    public enum Direction
+    {
+        ANTICLOCWISE,                                   //  Turning Dome anticlockwise
+        CLOCKWISE                                       //  Turning Dome clockwise
+    }
+
+    /// <summary>
     /// Peltier Objcet
     /// </summary>
     public class ArduinoDome
@@ -29,34 +38,106 @@ namespace ArduinoDome_ns
         // 
         //  Board Configurations
         //
-        const uint Peltier_PWM = 4;//2;                 //  Peltier Cell PWM channel
-        const uint Room_Temperature_ADC = 3;            //  ADC channel measuring the Room Temperature
-        const uint Peltier_Temperature_ADC = 2;         //  ADC channel measuring the Peltier Cell temperature
-        const uint AVR_BandGap_ADC = 30;                //  ADC Bandgap channel
-        const uint AVR_GND_ADC = 31;                    //  ADC ground channel
-        const double ADC_Ref = 5.0;                     //  ADC Reference voltage used in conversion
+
+        /// <summary>
+        /// Command to turn clockwise
+        /// </summary>
+        const uint MotorClockwise = 4;                  
+        /// <summary>
+        /// Command to turn anticlockwise
+        /// </summary>
+        const uint MotorAnticlockwise = 5;
+        /// <summary>
+        /// Variable to indicate the Capability of the driver to use Encoder 
+        /// quadrature signals A & B
+        /// </summary>
+        const bool use_Encoder_A_B = false;
+        /// <summary>
+        /// Variable to indicate the capability of the dri er to use encoder
+        /// home signal
+        /// </summary>
+        const bool use_Encoder_Home = false;
+        /// <summary>
+        /// The encoder dummy request to identify a message of new dome position
+        /// </summary>
+        const ulong EncoderDummyRequest = ulong.MaxValue;
+        /// <summary>
+        /// The ADC reference voltage
+        /// </summary>
+        const double ADC_Ref = 5.0;
+        /// <summary>
+        /// Data structure to store all the Arduino implemented commands
+        /// </summary>
+        public struct DomeCommands
+        {
+            /// <summary>
+            /// Command syntax
+            /// </summary>
+            public struct Syntax
+            {
+                public static string End = "\r\n";
+                public static string Space = " ";
+                public static string CR = "\r\n'";
+            }
+            /// <summary>
+            /// Command to turn anticlockwise
+            /// </summary>
+            public static string TurnAnticlockwise = "turn_left";
+            /// <summary>
+            /// Command to turn clockwise
+            /// </summary>
+            public static string TurnClockwise = "turn_right";
+            /// <summary>
+            /// Command to stop turning
+            /// </summary>
+            public static string stopTurning = "stop";
+            /// <summary>
+            /// Command to get The Dome position
+            /// </summary>
+            public static string getPosition = "pos";
+            /// <summary>
+            /// Command to get help
+            /// </summary>
+            public static string getHelp = "help";
+            /// <summary>
+            /// Command to get FW info
+            /// </summary>
+            public static string getInfo = "info";
+        }
 
         #endregion
 
         #region Members
 
-        private MessageData message;                    //  Message Data Structure
-        private ulong reqCounter = 0;                   //  Global counter to generate an unique message ID
-        private DispatcherTimer runTimer;               //  Timer to synchronize the unfill the write FIFO queue
+        /// <summary>
+        /// The message data structure
+        /// </summary>
+        private MessageData message;
+        /// <summary>
+        ///  counter to generate an unique message ID
+        /// </summary>
+        private ulong reqCounter = 0;
+        /// <summary>
+        /// Timer to synchronize the unfill the write FIFO queue
+        /// </summary>
+        private DispatcherTimer runTimer;
 #if USE_DOUBLE_QUEUE
-        private Queue<MessageData> sendBuffer;          //  FIFO Queue of the write buffer
-        private List<MessageData> receiveBuffer;       //  FIFO Queue of the read buffer        
-#endif
-        //public double room_temperature { get; set; }    //  Member storing the Room Temperature
-        //public double peltier_temperature { get; set; } //  Member storing the Peltier Cell Temperature
-        //public uint pwm_level { get; set; }             //  Peltier Cell PWM channel level
-        public Angle DomePosition { get; set; }           //  Dome Position Angle
-        public AVRDevice _avr;                          //  AVR Object
+        /// <summary>
+        /// FIFO Queue of the write buffer
+        /// </summary>
+        private Queue<MessageData> sendBuffer;
+        /// <summary>
+        /// FIFO Queue of the read buffer
+        /// </summary>
+        private List<MessageData> receiveBuffer;
+#endif        
+        /// <summary>
+        /// The Arduino object
+        /// </summary>
+        public AVRDevice _avr;
 #if USE_SINGLE_QUEUE
         private Queue<string> avrResult;                //  FIFO storing the Strings received from AVR
-#endif
-        //public double alpha = 1.0;                      //  ADC Calibration Gain factor
-        //public double beta = 0;                         //  ADC Calibration Offset factor
+#endif        
 
         #endregion
 
@@ -70,43 +151,38 @@ namespace ArduinoDome_ns
         public ArduinoDome()
         {
             //  AVR NOT INITIALIZED
-            _avr = null;
-            //room_temperature = -100;
-            //peltier_temperature = -100;
-            //pwm_level = 0;
-            DomePosition = 0.0;
-            runTimer = new DispatcherTimer();
+            _avr = null;                                        //  Arduino not connected yet
+            DomePosition = 0.0;                                 //  Initialize Dome at Home position
+            //  Initialize the timer that checks periodically
+            //  the In/Out queues
+            runTimer = new DispatcherTimer();   
             runTimer.Interval = new TimeSpan(0, 0, 0, 500);
             runTimer.Tick += new EventHandler(runTimer_Tick);
             runTimer.Start();
             //  Initialize the Input FIFO
 #if USE_DOUBLE_QUEUE
+            //  Create In/Out queues
             sendBuffer = new Queue<MessageData>();
             receiveBuffer = new List<MessageData>();
 #endif
 #if USE_SINGLE_QUEUE
             avrResult = new Queue<string>();
 #endif
-
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Peltier"/> class.
         /// </summary>
         /// <param name="com">The AVR Serial Port Name.</param>
-        public ArduinoDome(string com)
-        {
-            //room_temperature = -100;
-            //peltier_temperature = -100;
-            //pwm_level = 0;
-            //  Initialize the Input FIFO
-#if USE_DOUBLE_QUEUE
-            sendBuffer = new Queue<MessageData>();
-            receiveBuffer = new List<MessageData>();
-#endif
-#if USE_SINGLE_QUEUE
-            avrResult = new Queue<string>();
-#endif
+        public ArduinoDome(string com):base()
+        {        
+//#if USE_DOUBLE_QUEUE
+//            sendBuffer = new Queue<MessageData>();
+//            receiveBuffer = new List<MessageData>();
+//#endif
+//#if USE_SINGLE_QUEUE
+//            avrResult = new Queue<string>();
+//#endif
             try
             {
                 //  Initialize the AVR object
@@ -123,20 +199,17 @@ namespace ArduinoDome_ns
         /// </summary>
         /// <param name="com">The AVR Serial Port Nale.</param>
         /// <param name="flag">if set to <c>true</c> Tells the application that AVR109 bootloader has to be used.</param>
-        public ArduinoDome(string com, bool flag)
-        {
-            //room_temperature = -100;
-            //peltier_temperature = -100;
-            //pwm_level = 0;
+        public ArduinoDome(string com, bool flag):base()
+        {         
             DomePosition = 0.0;
             //  Initialize the Input FIFO
-#if USE_DOUBLE_QUEUE
-            sendBuffer = new Queue<MessageData>();
-            receiveBuffer = new List<MessageData>();
-#endif
-#if USE_SINGLE_BUFFER
-            avrResult = new Queue<string>();
-#endif
+//#if USE_DOUBLE_QUEUE
+//            sendBuffer = new Queue<MessageData>();
+//            receiveBuffer = new List<MessageData>();
+//#endif
+//#if USE_SINGLE_BUFFER
+//            avrResult = new Queue<string>();
+//#endif
             try
             {
                 //  Initialize the AVR object
@@ -152,13 +225,61 @@ namespace ArduinoDome_ns
 
         #region Event Handlers
 
+        /// <summary>
+        /// RunTimer Timer Tick Event handler. This handler sends all the requests into the
+        /// out queue
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void runTimer_Tick(object sender, EventArgs e)
         {
+            // Send all the request in queue
             foreach (MessageData req in sendBuffer)
-            {
-                //MessageData msg;
-                //msg.reqID = SendCommand(req);
+            {                
                 SendCommand(req);
+            }
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Dome angle position.
+        /// </summary>
+        /// <value>
+        /// The dome angle position.
+        /// </value>
+        public Angle DomePosition //{ get; set; }
+        {
+            get;
+            set
+            {
+                Angle oldPos = DomePosition;
+                try
+                {
+                    List<MessageData> foo = receiveBuffer;
+                    foreach (MessageData m in foo)
+                    {
+                        if (m.msg.Contains("Position="))
+                        {
+                            try
+                            {
+                                string[] tokens = m.msg.Split(' ');
+                                DomePosition = (Angle)Convert.ToDouble(tokens[1]);
+                            }
+                            catch (Exception ex)
+                            {
+                                DomePosition = oldPos;
+                                throw new Exception("Error reading dome position");
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
             }
         }
 
@@ -167,30 +288,42 @@ namespace ArduinoDome_ns
         #region Methods
 
         /// <summary>
-        /// Method to Clips the input level.
+        /// Builds the arduino command.
         /// </summary>
-        /// <param name="level">The level to be clipped on 16 bits.</param>
-        /// <returns></returns>
-        private uint pwm_clip(uint level)
+        /// <param name="cmd">The command to pass to Arduino.</param>
+        /// <returns>The Arduino string</returns>
+        public string BuildArduinoCommand(string cmd)
         {
-            //  If level is < 0 returns 0, else if it is greater than 65535(2^16-1) returns 65535
-            //  else return the level value
-            if (level < 0) return 0;
-            else if (level > 65535) return 65535;
-            else return level;
+            return cmd + DomeCommands.Syntax.Space + DomeCommands.Syntax.End;
+        }
+
+        /// <summary>
+        /// Builds the arduino command.
+        /// </summary>
+        /// <param name="cmd">The command to pass to Arduino.</param>
+        /// <param name="args">The argument of the command.</param>
+        /// <returns></returns>
+        public string BuildArduinoCommand(string cmd, string args)
+        {
+            return cmd + DomeCommands.Syntax.Space + args + DomeCommands.Syntax.End;
         }
 
         /// <summary>
         /// Connects the Application to the AVR instance.
         /// </summary>
+        /// <returns>True f operation was good, false otherwise</returns>
         /// <exception cref="System.NullReferenceException">AVR Objcet not referenced in Peltier class</exception>
-        public void Connect()
+        public bool Connect()
         {
             //  If the AVR instance has already been instantied launch its connect method, else throw an exception
             try
             {
-                if (_avr != null) _avr.Connect();
-                else throw new NullReferenceException("AVR Objcet not referenced in Peltier class");
+                if (_avr != null)
+                {
+                    _avr.Connect();
+                    return true;
+                }
+                else return false;//throw new NullReferenceException("AVR Objcet not referenced in Peltier class");
             }
             catch (Exception ex)
             {
@@ -201,13 +334,21 @@ namespace ArduinoDome_ns
         /// <summary>
         /// Disconnects the Application to the AVR instance.
         /// </summary>
+        /// <returns>True of operatop, was good, false otehrwise</returns>
         /// <exception cref="System.NullReferenceException">AVR Object not referenced in Peltrier Class</exception>
-        public void Disconnect()
+        public bool Disconnect()
         {
             try
             {
-                if (_avr == null) throw new NullReferenceException("AVR Object not referenced in Peltrier Class");
-                _avr.Disconnect();
+                if (_avr == null) //throw new NullReferenceException("AVR Object not referenced in Peltrier Class");
+                {
+                    return false;
+                }
+                else
+                {
+                    _avr.Disconnect();
+                    return true;
+                }
                 //_avr.Dispose();
             }
             catch (Exception ex)
@@ -225,7 +366,7 @@ namespace ArduinoDome_ns
         {
             //  Create the request string
 
-            string request = _msg.msg + "\r\n";
+            string request = _msg.msg + DomeCommands.Syntax.End;
             //  Send the request to the AVR instance
             _avr.Send(request);
             //
@@ -237,8 +378,10 @@ namespace ArduinoDome_ns
                 //  Waits the AVR to complete the operation and read from the AVR instance
                 Thread.Sleep(100);
                 string result = _avr.getCOMData();
+                //  Command return string
+                string foo = _msg.msg + DomeCommands.Syntax.Space + "OK";
                 //  If the result contains "OK" 
-                if (result.Contains("OK"))
+                if (result.Contains(foo))
                 {
                     //  Push the received string into the Input FIFO and return
                     MessageData data;
@@ -253,10 +396,15 @@ namespace ArduinoDome_ns
                     //  a CR LF string reading the output.
                     //  Then the string is send again to the AVR instance
                     count--;
-                    _avr.Send("\r\n");
-                    Thread.Sleep(100);
-                    _avr.Send("\r\n");
-                    Thread.Sleep(100);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        _avr.Send(DomeCommands.Syntax.CR);
+                        Thread.Sleep(100);
+                    }
+                    //_avr.Send("\r\n");
+                    //Thread.Sleep(100);
+                    //_avr.Send("\r\n");
+                    //Thread.Sleep(100);
                     _avr.getCOMData();
                 }
                 else
@@ -281,7 +429,7 @@ namespace ArduinoDome_ns
         public bool SendCommand(string cmd)
         {
             //  Create the request string
-            string request = cmd + "\r\n";
+            string request = cmd + DomeCommands.Syntax.End;
             //  Send the request to the AVR instance
             _avr.Send(request);
             //
@@ -355,24 +503,11 @@ namespace ArduinoDome_ns
         }
 
         /// <summary>
-        /// PInitialize the Peltier Instance.
+        /// Initialize the Dome Instance.
         /// </summary>        
-        public string PeltierInit()
-        //public void PeltierInit()
+        public void Init()
         {
-            string result;
-            try
-            {
-                //  Send the command to initialize the PWM channel connected to the Peltier Cell
-                result = InitPwm(Peltier_PWM);
-                //  Initialize the ADC channels connected to the Thermal Sensors
-                result += InitSensors();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
         }
 
         /// <summary>
@@ -380,7 +515,7 @@ namespace ArduinoDome_ns
         /// </summary>
         /// <returns>The Dome Angle position in string</returns>
         /// <exception cref="System.Text.EncoderFallbackException">Timeout from getting Dome Position</exception>
-        public string GetDomePosition()
+        public Angle GetDomePosition()
         {
             try
             {                
@@ -439,10 +574,10 @@ namespace ArduinoDome_ns
         /// <param name="pwm">The PWM channel.</param>
         /// <exception cref="System.Exception"></exception>
         /// <exception cref="System.ArgumentOutOfRangeException">Invalid PWM channel</exception>        
-        protected string InitPwm(uint pwm)
-        //protected void InitPwm(uint pwm)
+        public string Stop()        
         {
             //  Initially check if the pwm channel is possible
+            uint pwm=0;
             if ((pwm >= 0) && (pwm < 5))
             {
                 try
