@@ -147,7 +147,12 @@ namespace ASCOM.Arduino
             ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             tl = new TraceLogger("", "Arduino");
+
             tl.Enabled = traceState;
+            tl.LogMessage("Doem", "Starting Dome");
+            tl.LogMessage("Dome", "Setting Chooser Form");
+            SetupDialog();
+
             tl.LogMessage("Dome", "Starting initialisation");
 
             connectedState = false; // Initialise connected to false
@@ -493,12 +498,12 @@ namespace ASCOM.Arduino
             //  Check on which direction is shorter to park
             if (_position > 180.0)
             {
-                _arduino.Slew(Direction.LEFT);
+                _arduino.Slew(Direction.ANTICLOCWISE);
                 while (!Parked) utilities.WaitForMilliseconds(100);
             }
             else if (_position < 180.0)
             {
-                _arduino.Slew(Direction.RIGHT);
+                _arduino.Slew(Direction.CLOCWISE);
                 while (!Parked) utilities.WaitForMilliseconds(100);
             }
             else if (_position == 0.0)
@@ -665,10 +670,11 @@ namespace ASCOM.Arduino
                 try
                 {
                     Marshal.ReleaseComObject(P);
+                    P = null;
                 }
                 catch { }
             }
-            P = null;
+            
         }
 
         /// <summary>

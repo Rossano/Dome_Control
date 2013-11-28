@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using ASCOM_Telescope_ns;
+using ASCOM.Arduino;
 using Xceed.Wpf;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Core;
@@ -35,7 +36,8 @@ namespace Dome_Control
         #region Members
 
         private Angle position { get; set; }
-        private ASCOM_Telescope Telescope;
+        //private ASCOM_Telescope Telescope;
+        private Dome _dome;
         private uint moveStep { get; set; }
         private string revisionString = "0.1";
         private bool isArduino;
@@ -49,12 +51,13 @@ namespace Dome_Control
         private string chmFullFileName;
         private DispatcherTimer mainTimer = new DispatcherTimer();
         private DebugWindow debugWnd = null;
-        private enum _status
+        private enum Status
         {
             TURN_LEFT,
             TURN_RIGHT,
             NO_TURN
         };
+        private Status _status;
         private double StartTime;
 
         #endregion
@@ -160,18 +163,19 @@ namespace Dome_Control
             //  Gets the Telescope/Dome position and plots them
             try
             {
-                DomePosition.Content = ((App)(System.Windows.Application.Current))._Dome_uC.GetDomePosition();
+                DomePosition.Content = _dome.Azimuth;//((App)(System.Windows.Application.Current))._Dome_uC.GetDomePosition();
             }
             catch (Exception ex)
             {
                 ErrDlg("Error getting Dome Position", ex);
             }
-            if (Telescope.isConnected())
+            if (_dome._telescope.isConnected())
             {
-                TelescopePos.Content = Telescope.getAzimut();
+                TelescopePos.Content = _dome._telescope.getAzimut();
             }
             //  Checks up the AVR connection and plot an error if it is found disconnected
-            if (!((App)(System.Windows.Application.Current))._Dome_uC.GetAck())
+            if(!_dome.Connected)
+            //if (!((App)(System.Windows.Application.Current))._Dome_uC.GetAck())
             {
                 ConnectionStatusLabel.Content = Disconnected_Label;
                 ErrDlg("Error: AVR disconnected", new Exception());
@@ -206,12 +210,12 @@ namespace Dome_Control
                 int i = AVRBaudrateListBox.SelectedIndex;
                 switch (i)
                 {
-                    case 0: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(9600); break;
-                    case 1: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(19200); break;
-                    case 2: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(38400); break;
-                    case 3: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(57600); break;
-                    case 4: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(112200); break;
-                    default: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(9600); break;
+                    //case 0: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(9600); break;
+                    //case 1: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(19200); break;
+                    //case 2: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(38400); break;
+                    //case 3: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(57600); break;
+                    //case 4: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(112200); break;
+                    //default: ((App)(System.Windows.Application.Current))._Dome_uC._avr.setBaudrate(9600); break;
                 }
 
             }
@@ -240,14 +244,16 @@ namespace Dome_Control
                 //
                 //  Initialize the AVR element
                 //
-                if (((App)(System.Windows.Application.Current))._Dome_uC == null)
+                if (_dome == null)
+                //if (((App)(System.Windows.Application.Current))._Dome_uC == null)
                 {
-                    ((App)(System.Windows.Application.Current))._Dome_uC = new Arduino.Dome.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
+                    //((App)(System.Windows.Application.Current))._Dome_uC = new Arduino.Dome.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
+                    _dome = new Dome(AVR_COM_Name, isArduinoBootloader);
                 }
                 //
                 //  Read the Firmware Versions and show it on a MessageBox
                 //
-                string ver = ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
+                string ver = _dome.DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
                 //  Parse the received string to the the useful information only
                 char[] delim = { ':', ' ', '\n' };
                 string[] tokens = ver.Split(delim);
@@ -274,8 +280,7 @@ namespace Dome_Control
                 //
                 mainTimer.Start();
 //                graphTimer.Start();
-                //  Initialize the Peltier 
-                ((App)(System.Windows.Application.Current))._Dome_uC.PeltierInit();
+                
                 //  Change the StatusBar Icon
                 ConnectionImage.Source = new BitmapImage(new Uri(@"/images/ConnectedImg.png", UriKind.Relative));
                 //  Change the StatusBar labels
@@ -288,7 +293,8 @@ namespace Dome_Control
                 //
                 //  Disconnect the AVR Device
                 //
-                ((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
+                _dome.Connected = false;
+                //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
                 //  Stops the timers
                 mainTimer.Stop();
 //                graphTimer.Stop();
@@ -448,7 +454,7 @@ namespace Dome_Control
 
         private void ASCOMConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            Telescope = new ASCOM_Telescope();
+            _telescope = new ASCOM_Telescope();
             //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
             ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
         }
@@ -497,32 +503,101 @@ namespace Dome_Control
 
         private void SingleDomeControl_Right_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-
+            if (_status == Status.NO_TURN)
+            {
+                try
+                {
+                    _dome.TurnRight();
+                    _status = Status.TURN_RIGHT;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error Slewing Right the Dome", ex);
+                }
+            }
         }
 
         private void SingleDomeControl_Right_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-
+            if (_status == Status.TURN_RIGHT)
+            {
+                try
+                {
+                    _dome.Stop();
+                    _status = Status.NO_TURN;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error Stopping slewing the Dome", ex);
+                }
+            }
         }
 
         private void SingleDomeControl_Left_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (_status == Status.NO_TURN)
+            {
+                try
+                {
+                    _dome.TurnLeft();
+                    _status = Status.TURN_LEFT;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error slewing Left the Dome", ex);
+                }
+            }
 
         }
 
         private void SingleDomeControl_Left_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-
+            if (_status == Status.TURN_LEFT)
+            {
+                try
+                {
+                    _dome.Stop();
+                    _status = Status.NO_TURN;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error stopping slweing the Dome", ex);
+                }
+            }
         }
 
         private void MultiDomeControl_Left_Click(object sender, RoutedEventArgs e)
         {
-
+            if (_status == Status.NO_TURN)
+            {
+                try
+                {
+                    _status = Status.TURN_LEFT;
+                    _dome.SlewToAzimuth(_dome.Azimuth - 2.0);
+                    _status = Status.NO_TURN;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error slewing multiple step left", ex);
+                }
+            }
         }
 
         private void MultiDomeControl_Right_Click(object sender, RoutedEventArgs e)
         {
-
+            if (_status == Status.NO_TURN)
+            {
+                try
+                {
+                    _status = Status.TURN_RIGHT;
+                    _dome.SlewToAzimuth(_dome.Azimuth + 2.0);
+                    _status = Status.NO_TURN;
+                }
+                catch (Exception ex)
+                {
+                    ErrDlg("Error slewing multiple step right", ex);
+                }
+            }
         }
     }
 }
