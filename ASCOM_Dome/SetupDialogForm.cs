@@ -17,15 +17,16 @@ namespace ASCOM.Arduino
         {
             InitializeComponent();
             // Initialise current values of user settings from the ASCOM Profile 
-            textBox1.Text = Dome.comPort;
+            DomeCOMTextBox.Text = Dome.comPort;
             chkTrace.Checked = Dome.traceState;
+            TelesChooseLabel.Text = Properties.Resources.TelescopeChooserLabelContent;
         }
 
         private void cmdOK_Click(object sender, EventArgs e) // OK button event handler
         {
             // Place any validation constraint checks here
 
-            Dome.comPort = textBox1.Text; // Update the state variables with results from the dialogue
+            Dome.comPort = DomeCOMTextBox.Text; // Update the state variables with results from the dialogue
             Dome.traceState = chkTrace.Checked;
         }
 
@@ -49,6 +50,11 @@ namespace ASCOM.Arduino
             {
                 MessageBox.Show(other.Message);
             }
+        }
+
+        private void TelescopeChooserButton_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 }

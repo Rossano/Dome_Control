@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 
 using ASCOM;
 using ASCOM.Astrometry;
@@ -90,11 +91,12 @@ namespace ASCOM.Arduino
         /// Private variable to hold the Aruidno Microcontroller driver
         /// </summary>
         private ArduinoDome _arduino;
+        public ASCOM_Telescope _telescope;
         private double _position;
         private bool Parked;
         private double ParkPosition;
-        private bool IsSlewing;       
-
+        private bool IsSlewing;
+        private System.Windows.Threading.DispatcherTimer DomeTimer;
         /// <summary>
         /// Private variable to hold the connected state
         /// </summary>
@@ -127,6 +129,10 @@ namespace ASCOM.Arduino
                 Braking = value;
             }
         }
+
+        public double Threshold { get; set; }
+
+        public bool Synced { get; set; }
                 
         #endregion
 
@@ -154,6 +160,11 @@ namespace ASCOM.Arduino
             IsSlewing = false;
             connectedState = false;
             Braking = 0.0;
+            DomeTimer = new System.Windows.Threading.DispatcherTimer();
+            DomeTimer.Interval = TimeSpan.FromSeconds(3);//new TimeSpan(0, 0, 3);
+            DomeTimer.Tick += DomeTimer_Tick;
+            DomeTimer.IsEnabled = true;
+            DomeTimer.Stop();
 
             tl.LogMessage("Dome", "Completed initialisation");
         }
@@ -555,7 +566,7 @@ namespace ASCOM.Arduino
             IsSlewing = true;
             if (_position < Azimuth)
             {
-                _arduino.Slew(Direction.LEFT);
+                _arduino.Slew(Direction.ANTICLOCWISE);
                 while (Math.Abs(_position - Azimuth) > Braking)
                 {
                     utilities.WaitForMilliseconds(100);
@@ -564,7 +575,7 @@ namespace ASCOM.Arduino
             }
             else if (_position > Azimuth)
             {
-                _arduino.Slew(Direction.RIGHT);
+                _arduino.Slew(Direction.CLOCKWISE);
                 while (Math.Abs(_position - Azimuth) > Braking)
                 {
                     utilities.WaitForMilliseconds(100);
@@ -589,12 +600,41 @@ namespace ASCOM.Arduino
 
         public void SyncToAzimuth(double Azimuth)
         {
-            tl.LogMessage("SyncToAzimuth", "Not implemented");
-            throw new ASCOM.MethodNotImplementedException("SyncToAzimuth");
+            tl.LogMessage("SyncToAzimuth", "Starting Synchronization to Azimuth");
+            DomeTimer.Start();
+            Synced = true;
+            //throw new ASCOM.MethodNotImplementedException("SyncToAzimuth");
+        }
+
+        public void UnsyncToAzimuth()
+        {
+            tl.LogMessage("UnsyncToAzimuth", "Stopping Synchroniziation to Azimouth");
+            DomeTimer.Stop();
+            Synced = false;
         }
 
         #endregion
 
+        #region Event Handlers
+
+        private void DomeTimer_Tick(object sender, EventArgs e)
+        {
+            //  Check if the connected telescope has moved enough to need a new dome slew
+            if (Math.Abs(_telescope.azimut - _position) > Threshold)
+            {
+                //  If yes check in which direction the dome has to turn and perform the slewing
+                if (_telescope.azimut > _position)
+                {
+                    SlewToAzimuth(_position + Threshold);
+                }
+                else
+                {
+                    SlewToAzimuth(_position - Threshold);
+                }
+            }
+        }
+
+        #endregion 
         #region Private properties and methods
         // here are some useful properties and methods that can be used as required
         // to help with driver development
@@ -745,8 +785,33 @@ namespace ASCOM.Arduino
 
         #endregion
 
+        #region Public Methods
+
+        public void TurnLeft()
+        {
+            //  Tell Arduino Driver to turn left and update slewing property
+            _arduino.Slew(Direction.ANTICLOCWISE);  
+            IsSlewing = true;
+        }
+
+        public void TurnRight()
+        {
+            //  Tell Arduino Driver to turn right and update slewing property
+            _arduino.Slew(Direction.CLOCKWISE);
+            IsSlewing = true;
+        }
+
+        public void Stop()
+        {
+            //  If is slewing, tells Arduino Driver to stop turning and update slewing property
+            if (IsSlewing)
+            {
+                _arduino.Stop();
+                IsSlewing = false;
+            }
+        }
+
+        #endregion
     }
 }
 
-Rispondi, Rispondi a tutti o Inoltra | Altro
-di Klaus Leidorf, del 

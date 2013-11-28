@@ -30,11 +30,12 @@ namespace ASCOM.Arduino
         {
             this.cmdOK = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.TelesChooseLabel = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.DomeCOMTextBox = new System.Windows.Forms.TextBox();
+            this.DomeCOMLabel = new System.Windows.Forms.Label();
             this.chkTrace = new System.Windows.Forms.CheckBox();
+            this.TelescopeChooserButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -62,13 +63,13 @@ namespace ASCOM.Arduino
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
             // 
-            // label1
+            // TelesChooseLabel
             // 
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(123, 31);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Construct your driver\'s setup dialog here.";
+            this.TelesChooseLabel.Location = new System.Drawing.Point(12, 66);
+            this.TelesChooseLabel.Name = "TelesChooseLabel";
+            this.TelesChooseLabel.Size = new System.Drawing.Size(162, 39);
+            this.TelesChooseLabel.TabIndex = 2;
+            this.TelesChooseLabel.Text = "Construct your driver\'s setup dialog here.";
             // 
             // picASCOM
             // 
@@ -84,42 +85,53 @@ namespace ASCOM.Arduino
             this.picASCOM.Click += new System.EventHandler(this.BrowseToAscom);
             this.picASCOM.DoubleClick += new System.EventHandler(this.BrowseToAscom);
             // 
-            // textBox1
+            // DomeCOMTextBox
             // 
-            this.textBox1.Location = new System.Drawing.Point(77, 87);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(158, 20);
-            this.textBox1.TabIndex = 4;
+            this.DomeCOMTextBox.Location = new System.Drawing.Point(178, 20);
+            this.DomeCOMTextBox.Name = "DomeCOMTextBox";
+            this.DomeCOMTextBox.Size = new System.Drawing.Size(91, 20);
+            this.DomeCOMTextBox.TabIndex = 4;
             // 
-            // label2
+            // DomeCOMLabel
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 90);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(58, 13);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Comm Port";
+            this.DomeCOMLabel.AutoSize = true;
+            this.DomeCOMLabel.Location = new System.Drawing.Point(12, 27);
+            this.DomeCOMLabel.Name = "DomeCOMLabel";
+            this.DomeCOMLabel.Size = new System.Drawing.Size(58, 13);
+            this.DomeCOMLabel.TabIndex = 5;
+            this.DomeCOMLabel.Text = "Comm Port";
             // 
             // chkTrace
             // 
             this.chkTrace.AutoSize = true;
-            this.chkTrace.Location = new System.Drawing.Point(77, 118);
+            this.chkTrace.Location = new System.Drawing.Point(15, 142);
             this.chkTrace.Name = "chkTrace";
             this.chkTrace.Size = new System.Drawing.Size(69, 17);
             this.chkTrace.TabIndex = 6;
             this.chkTrace.Text = "Trace on";
             this.chkTrace.UseVisualStyleBackColor = true;
             // 
+            // TelescopeChooserButton
+            // 
+            this.TelescopeChooserButton.Location = new System.Drawing.Point(194, 66);
+            this.TelescopeChooserButton.Name = "TelescopeChooserButton";
+            this.TelescopeChooserButton.Size = new System.Drawing.Size(75, 23);
+            this.TelescopeChooserButton.TabIndex = 7;
+            this.TelescopeChooserButton.Text = "button1";
+            this.TelescopeChooserButton.UseVisualStyleBackColor = true;
+            this.TelescopeChooserButton.Click += new System.EventHandler(this.TelescopeChooserButton_Click);
+            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(350, 175);
+            this.Controls.Add(this.TelescopeChooserButton);
             this.Controls.Add(this.chkTrace);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.DomeCOMLabel);
+            this.Controls.Add(this.DomeCOMTextBox);
             this.Controls.Add(this.picASCOM);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.TelesChooseLabel);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOK);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -139,10 +151,11 @@ namespace ASCOM.Arduino
 
         private System.Windows.Forms.Button cmdOK;
         private System.Windows.Forms.Button cmdCancel;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label TelesChooseLabel;
         private System.Windows.Forms.PictureBox picASCOM;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox DomeCOMTextBox;
+        private System.Windows.Forms.Label DomeCOMLabel;
         private System.Windows.Forms.CheckBox chkTrace;
+        private System.Windows.Forms.Button TelescopeChooserButton;
     }
 }

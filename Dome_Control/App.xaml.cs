@@ -13,6 +13,6 @@ namespace Dome_Control
     /// </summary>
     public partial class App : Application
     {
-        public ArduinoDome _Dome_uC;
+        //public ArduinoDome _Dome_uC;
     }
 }

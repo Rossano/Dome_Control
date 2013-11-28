@@ -103,6 +103,7 @@ namespace Arduino.Dome
             /// Command to get FW info
             /// </summary>
             public static string getInfo = "info";
+            public static string getAck = "get_ACK";
         }
 
         #endregion
@@ -252,34 +253,147 @@ namespace Arduino.Dome
         /// </value>
         public Angle DomePosition //{ get; set; }
         {
-            get;
-            set
+            set;
+            get
             {
+                //  Stores last Dome angle position
                 Angle oldPos = DomePosition;
+                //
+                //  Look into the RX queue if the Arduino hasn't alrady
+                //  sent a position update
+                //
                 try
                 {
+                    //  Copy the RX queue to parse
                     List<MessageData> foo = receiveBuffer;
+                    //  Parse the queue trying to catch the tag "Position=" indicating
+                    //  a position update
                     foreach (MessageData m in foo)
                     {
                         if (m.msg.Contains("Position="))
                         {
+                            //  If found split the received string into its tokens and covert it
+                            //  into a double to update the property
                             try
                             {
                                 string[] tokens = m.msg.Split(' ');
-                                DomePosition = (Angle)Convert.ToDouble(tokens[1]);
+                                return (Angle)Convert.ToDouble(tokens[1]);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
-                                DomePosition = oldPos;
+                                //  In case of error restore old position and throw an exception
+                                return oldPos;
                                 throw new Exception("Error reading dome position");
                             }
                         }
                     }
+                    //
+                    //  If there are no position update into the RX queue, launch an Arduino 
+                    //  command to read the position
+                    //
+                    if (oldPos == DomePosition)
+                    {
+                        //  Build up the Arduino command string for requesting the Dome position
+                        string cmd = BuildArduinoCommand(DomeCommands.getPosition);
+                        string result;
+#if USE_DOUBLE_QUEUE
+                        MessageData _msg;
+                        //  Check if the request is equal to the requestless Encoder Position information
+                        //  if yes roll up the counter
+                        if (reqCounter++ == EncoderDummyRequest)
+                        {
+                            try { reqCounter++; }
+                            catch { }
+                        }
+                        //  Build up position the request
+                        _msg.reqID = reqCounter;
+                        _msg.msg = cmd;
+                        //  Enqueue the request on the TX queue
+                        sendBuffer.Enqueue(_msg);
+                        int index = int.MaxValue;
+                        //  Awaits the answer to the position request, if it is received 
+                        //  the RX data are consumed and property update, else an exception
+                        //  is returned
+                        if (waitAVRAnswer(_msg.reqID, index))
+                        {
+                            //  Retrieve the Arduino message corresponding position request
+                            result = receiveBuffer[index].msg;
+                            //  Remove this item from the RX queue
+                            receiveBuffer.RemoveAt(index);
+                            //  Split the RX data into their tokens to consume the information
+                            char[] delim = { ' ', '=', '\r', '\n' };
+                            string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
+                            //  Try to convert the data in a double and then return the angle
+                            try
+                            {
+                                return (Angle)Convert.ToDouble(tokens[1]);
+                            }
+                            catch
+                            {                                
+                                throw new Exception("Error reading Dome position");
+                                return oldPos;
+                            }
+                        }
+                        else
+                        {                            
+                            throw new Exception("Timeout getting Dome position");
+                            return oldPos;
+                        }
+#endif
+                    }
+                    else
+                    {
+                        return oldPos;
+                    }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    throw;
+                    //  In case of error throw the relative exception                    
+                    throw ex;
+                    return oldPos;
                 }
+            }
+        }
+
+        public string Version
+        {
+            get
+            {
+                string cmd = BuildArduinoCommand(DomeCommands.getInfo);
+                string result;
+#if USE_DOUBLE_QUEUE
+                MessageData _msg;
+                //  Check if the request is equal to the requestless Encoder Position information
+                //  if yes roll up the counter
+                if (reqCounter++ == EncoderDummyRequest)
+                {
+                    try { reqCounter++; }
+                    catch { }
+                }
+                //  Build up position the request
+                _msg.reqID = reqCounter;
+                _msg.msg = cmd;
+                //  Enqueue the request on the TX queue
+                sendBuffer.Enqueue(_msg);
+                int index = int.MaxValue;
+                //  Awaits the answer to the position request, if it is received 
+                //  the RX data are consumed and property update, else an exception
+                //  is returned
+                if (waitAVRAnswer(_msg.reqID, index))
+                {
+                    //  Retrieve the Arduino message corresponding position request
+                    result = receiveBuffer[index].msg;
+                    //  Remove this item from the RX queue
+                    receiveBuffer.RemoveAt(index);
+                    //  Return the Arduino answer
+                    return result;
+                }
+                else
+                {
+                    return null;
+                    throw new Exception("Timeout getting Dome position");
+                }
+#endif
             }
         }
 
@@ -515,7 +629,7 @@ namespace Arduino.Dome
         /// </summary>
         /// <returns>The Dome Angle position in string</returns>
         /// <exception cref="System.Text.EncoderFallbackException">Timeout from getting Dome Position</exception>
-        public Angle GetDomePosition()
+        public string GetDomePosition()
         {
             try
             {                
@@ -576,57 +690,10 @@ namespace Arduino.Dome
         /// <exception cref="System.ArgumentOutOfRangeException">Invalid PWM channel</exception>        
         public string Stop()        
         {
-            //  Initially check if the pwm channel is possible
-            uint pwm=0;
-            if ((pwm >= 0) && (pwm < 5))
-            {
-                try
-                {
-                    //  Creates the PWM initialization channel in the AVR Firmware format
-                    string cmd = string.Format("pwm_init {0}", pwm);
-                    string result;
-                    //  Send the command to the AVR instance, if the result is true (AVR instance responded "OK")
-                    //  Read the result from the FIFO to clean it up.
-                    //  Else send an exception using the resulting string as message
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                        return result;
-                    }
-                    else throw new Exception("Timeout from PWM Init function");
-#endif
-#if USE_SINGLE_QUEUE
-                    if (SendCommand(cmd) == true) result = avrResult.Dequeue();
-                    else throw new Exception(avrResult.Dequeue());
-                    return result;
-#endif
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-            }
-            else throw new ArgumentOutOfRangeException("Invalid PWM channel");
-        }
-
-        /// <summary>
-        /// Initialize the ADC channel connected to the Temperature sensors.
-        /// </summary>
-        /// <exception cref="System.Exception"></exception>
-        protected string InitSensors()
-        //protected void InitSensors()
-        {
             try
             {
-                //  Create the ADC initialization command in AVR Firmware version
-                string cmd = "adc_init";
+                //  Creates the Arduino stop command
+                string cmd = BuildArduinoCommand(DomeCommands.stopTurning);
                 string result;
                 //  Send the command to the AVR instance, if the result is true (AVR instance responded "OK")
                 //  Read the result from the FIFO to clean it up.
@@ -643,418 +710,13 @@ namespace Arduino.Dome
                     receiveBuffer.RemoveAt(index);
                     return result;
                 }
-                else throw new Exception("Timeout from Init Sensor function");
+                else throw new Exception("Timeout from PWM Init function");
 #endif
 #if USE_SINGLE_QUEUE
-                if (SendCommand(cmd)) result = avrResult.Dequeue();
-                else throw new Exception(avrResult.Dequeue());
-                return result;
-#endif
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        /// <summary>
-        /// Set the level of the PWM channel.
-        /// </summary>
-        /// <param name="channel">The PWM channel.</param>
-        /// <param name="level">The new PWM level.</param>
-        /// <exception cref="System.Exception"></exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Invalid PWM channel</exception>
-        public string PwmSet(uint channel, uint level)
-        // public void PwmSet (uint channel, uint level)
-        {
-            //  Firstly check if the PWM channel is coherent
-            if ((channel >= 0) && (channel < 5))
-            {
-                try
-                {
-                    //  Create the PWM set command in the AVR Firmware format
-                    string cmd = string.Format("pwm_set {0} {1}", channel, level);
-                    string result;
-                    //  Send the command to the AVR instance, if the result is true (AVR instance responded "OK")
-                    //  Read the result from the FIFO to clean it up.
-                    //  Else send an exception using the resulting string as message.
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                        return result;
-                    }
-                    else throw new Exception("Timeout from PWM Set function");
-#endif
-#if USE_SINGLE_QUEUE
-                    if (SendCommand(cmd)) result = avrResult.Dequeue();
+                    if (SendCommand(cmd) == true) result = avrResult.Dequeue();
                     else throw new Exception(avrResult.Dequeue());
                     return result;
 #endif
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-            }
-            else throw new ArgumentOutOfRangeException("Invalid PWM channel");
-        }
-
-        /// <summary>
-        /// Start a PWMs channel.
-        /// </summary>
-        /// <param name="channel">The PWM channel.</param>
-        /// <exception cref="System.Exception"></exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Invalid PWM channel</exception>
-        public string PwmStart(uint channel)
-        // public void PwmStart(uint channel)
-        {
-            //  Firstly check if the PWM channel is coherent
-            if ((channel >= 0) && (channel < 5))
-            {
-                try
-                {
-                    //  Create the PWM start command in the AVR Firmware format
-                    string cmd = string.Format("pwm_start {0}", channel);
-                    string result;
-                    //  Send the command to the AVR instance, if the result is true (AVR instance responded "OK")
-                    //  Read the result from the FIFO to clean it up.
-                    //  Else send an exception using the resulting string as message.
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                        return result;
-                    }
-                    else throw new Exception("Timeout from PWM Start function");
-#endif
-#if USE_SINGLE_QUEUE
-                    if (SendCommand(cmd)) result = avrResult.Dequeue();
-                    else throw new Exception(avrResult.Dequeue());
-                    return result;
-#endif
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-            }
-            else throw new ArgumentOutOfRangeException("Invalid PWM channel");
-        }
-
-        /// <summary>
-        /// Stop a PWMs channel.
-        /// </summary>
-        /// <param name="channel">The PWM channel.</param>
-        /// <exception cref="System.
-        /// Exception"></exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Invalid PWM channel</exception>
-        public string PwmStop(uint channel)
-        // public void PwmStop(uint channel)
-        {
-            //  Firstly check if the PWM channel is coherent
-            if ((channel >= 0) && (channel < 5))
-            {
-                try
-                {
-                    //  Create the PWM stop command in the AVR Firmware format
-                    string cmd = string.Format("pwm_stop {0}", channel);
-                    string result;
-                    //  Send the command to the AVR instance, if the result is true (AVR instance responded "OK")
-                    //  Read the result from the FIFO to clean it up.
-                    //  Else send an exception using the resulting string as message.
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                        return result;
-                    }
-                    else throw new Exception("Timeout from PWM Start function");
-#endif
-#if USE_SINGLE_BUFFER
-                    if (SendCommand(cmd)) result = avrResult.Dequeue();
-                    else throw new Exception(avrResult.Dequeue());
-                    return result;
-#endif
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-            }
-            else throw new ArgumentOutOfRangeException("Invalid PWM channel");
-        }
-
-        /// <summary>
-        /// Method to Calibrate the ADC.
-        /// </summary>
-        /// <exception cref="System.Exception">
-        /// </exception>
-        public void ADCCalibration()
-        {
-            //
-            //  The Method is measuring two known voltages on the ADC (the ground and the Bandgap)
-            //  And from the result and the exptected result is carrying out the gain and offset corrections.
-            //
-            try
-            {
-                //  Read the ADC ground channel
-                string cmd = string.Format("adc_get  {0}", AVR_GND_ADC);
-                string result;
-                uint A0, A1;
-                //  Send the command and reads out the result
-                if (SendCommand(cmd))
-                {
-                    Thread.Sleep(100);
-                    //  Read the response from FIFO
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                    }
-                    else throw new Exception("Timeout from PWM Start function");
-#endif
-#if USE_SINGLE_QUEUE
-                    result = avrResult.Dequeue();
-#endif
-                    //  Split the string in its different words (tokens)
-                    char[] delim = { ' ', ':', ';', '\r', '\n' };
-                    string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
-                    uint i = 0;
-                    //  Looks into the tokens for "ADC->"  the value is the next one
-                    foreach (string s in tokens)
-                    {
-                        if (s.Equals("ADC->")) break;
-                        i++;
-                    }
-                    //  Convert and store the ADC value
-                    A0 = Convert.ToUInt16(tokens[i + 1]);
-                }
-                else
-                {
-#if USE_DOUBLE_QUEUE
-                    throw new Exception("Erroror during thr ADC calicbration procedure");
-#endif
-#if USE_SINGLE_QUEUE
-                    throw new Exception(avrResult.Dequeue());
-#endif
-                }
-                //  Read teh ADC Bandgap channel
-                cmd = string.Format("adc_get {0}", AVR_BandGap_ADC);
-                //  Send the command and read out the result
-                if (SendCommand(cmd))
-                {
-                    Thread.Sleep(100);
-                    //  Read the response from the FIFO
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID = reqCounter++;
-                    _msg.msg = cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index = int.MaxValue;
-                    if (waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result = receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                    }
-                    else throw new Exception("Timeout from PWM Start function");
-#endif
-#if USE_SINGLE_QUEUE
-                    result = avrResult.Dequeue();
-#endif
-                    //  Split the string in its different words (tokens)
-                    char[] delim = { ' ', ':', ';', '\r', '\n' };
-                    string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
-                    uint i = 0;
-                    //  Looks into the tokens for "ADC->" the value conversion is the next one
-                    foreach (string s in tokens)
-                    {
-                        if (s.Equals("ADC->")) break;
-                        i++;
-                    }
-                    //  Convert and store the ADC value
-                    A1 = Convert.ToUInt16(tokens[i + 1]);
-                }
-                else
-                {
-#if USE_DOUBLE_QUEUE
-                    throw new Exception("Error reading the from ADC during calibration procedure");
-#endif
-#if USE_SINGLE_QUEUE
-                    throw new Exception(avrResult.Dequeue());
-#endif
-                }
-                //  Carry out the offset and gain correction factors
-                //beta = (double)A0 / 1023 * ADC_Ref;
-                //alpha = ((A1 - A0) * ADC_Ref) / 1023 / 1.1;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        /// <summary>
-        /// Gets the temperature from a sensor.
-        /// This method read from an ADC channel and returns the conversion result. It is an ADC reading function.
-        /// </summary>
-        /// <param name="channel">The ADC channel.</param>
-        /// <returns></returns>
-        /// <exception cref="System.Exception"></exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">Invalid ADC channel</exception>
-        public uint GetTemperature(uint channel)
-        {
-            //  Firstly check if the channel are coherent with the Arduino Analog Inputs, or the Bandgap Channel
-            if ((channel >= 0) && (channel <= 5) || ((channel >= 9) && (channel <= 10)) || (channel == AVR_BandGap_ADC))
-            {
-                try
-                {
-                    //  Create the ADC reading string in the AVR FIrmware format.
-                    string cmd = string.Format("adc_get {0}", channel);
-                    string result;
-                    //  Send the command to the AVR instance and read the result
-                    if (SendCommand(cmd))
-                    {
-                        bool endit = false;
-                        do
-                        {
-                            //  Get the AVR result from FIFO
-#if USE_DOUBLE_QUEUE
-                            MessageData _msg;
-                            _msg.reqID = reqCounter++;
-                            _msg.msg = cmd;
-                            sendBuffer.Enqueue(_msg);
-                            int index = int.MaxValue;
-                            if (waitAVRAnswer(_msg.reqID, index))
-                            {
-                                result = receiveBuffer[index].msg;
-                                receiveBuffer.RemoveAt(index);
-                                endit = true;
-                            }
-                            else throw new Exception("Timeout from PWM Start function");
-#endif
-#if USE_SINGLE_QUEUE
-                            result = avrResult.Dequeue();
-#endif
-                            //  Split the result into the words (the tokens)
-                            char[] delim = { ' ', ':', ';', '\r', '\n' };
-                            string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
-                            uint i = 0;
-                            //  Parse the tokens to look for "ADC->"
-                            foreach (string s in tokens)
-                            {
-                                if (s.Equals("ADC->")) break;
-                                i++;
-                            }
-                            //  the Conversion value is the next one
-                            return Convert.ToUInt16(tokens[i + 1]);
-                        }
-#if USE_DOUBLE_QUEUE
-                        while (!endit);
-#endif
-#if USE_SINGLE_QUEUE
-                        while (avrResult.Count > 0);
-#endif
-                    }
-                    else
-                    {
-#if USE_DOUBLE_QUEUE
-                        throw new Exception("Error reading Temperature");
-#endif
-#if USE_SINGLE_QUEUE
-                        throw new Exception(avrResult.Dequeue());
-#endif
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-            }
-            else throw new ArgumentOutOfRangeException("Invalid ADC channel");
-            return 0;
-        }
-
-        /// <summary>
-        /// Gets the Peltier Cell and Room temperatures.
-        /// This method reads the ADC channels connected to the temperature sensors and convert the result as temperatures.
-        /// </summary>
-        public string GetTemperatures()
-        //public void GetTemperatures()
-        {
-            string result;
-            try
-            {
-                //  Read the Peltier Cell temperature and convert it into voltage
-                double VADC_Peltier = GetTemperature(Peltier_Temperature_ADC) * ADC_Ref / 1023;
-                //                System.Threading.Thread.Sleep(100);
-                //  Read the Room temperature and convert is into voltage
-                double VADC_Room = GetTemperature(Room_Temperature_ADC) * ADC_Ref / 1023;
-                //  Convert the ADV voltage values into temperature
-                //room_temperature = (VADC_Room - 0.5) / 0.01;
-                //peltier_temperature = (VADC_Peltier - 0.5) / 0.01;
-                //result = string.Format("Peltier T={0}\nRoom T={1}\n", peltier_temperature, room_temperature);
-                //return result;
-                return string.Empty;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        /// <summary>
-        /// Gets the Peltier Cell and Room temperatures.
-        /// This method reads the ADC channels connected to the temperature sensors and convert the result as temperatures.
-        /// </summary>
-        public string GetTemperatures(uint samples)
-        //public void GetTemperatures(uint samples)
-        {
-            string result;
-            try
-            {
-                double foo1 = 0.0;
-                double foo2 = 0.0;
-                for (uint i = 0; i < samples; i++)
-                {
-                    //  Read the Peltier Cell temperature and convert it into voltage
-                    double VADC_Peltier = GetTemperature(Peltier_Temperature_ADC) * ADC_Ref / 1023;
-                    //                System.Threading.Thread.Sleep(100);
-                    //  Read the Room temperature and convert is into voltage
-                    double VADC_Room = GetTemperature(Room_Temperature_ADC) * ADC_Ref / 1023;
-                    //  Convert the ADV voltage values into temperature
-                    foo1 += (VADC_Room - 0.5) / 0.01;
-                    foo2 += (VADC_Peltier - 0.5) / 0.01;
-                }
-                //room_temperature = foo1 / samples;
-                //peltier_temperature = foo2 / samples;
-                //result = string.Format("Peltier T={0}\nRoom T={1}", peltier_temperature, room_temperature);
-                //return result;
-                return string.Empty;
             }
             catch (Exception ex)
             {
@@ -1072,22 +734,38 @@ namespace Arduino.Dome
             try
             {
                 //  Prepare the AVR Firmware Version string command
-                string cmd = "info\r\n";
-                //  Send the command to the AVR instance
-                _avr.Send(cmd);
-                Thread.Sleep(1000);
-                //  Reads back the answer from the AVR and check if it is consistent
-                string res = _avr.getCOMData();
-                //  If it contains "OK" returns the string from AVR
-                //  Else throw an exception
-                if (res.Contains("OK")) return res;
-                else if (res.Contains("Error:")) throw new Exception(res);
+                string cmd = BuildArduinoCommand(DomeCommands.getInfo);
+                string result;
+#if USE_DOUBLE_QUEUE
+                MessageData _msg;
+                if(reqCounter++ == EncoderDummyRequest)
+                {
+                    try { reqCounter++; }
+                    catch { }
+                }
+                _msg.reqID=reqCounter;
+                _msg.msg=cmd;
+                //  Enqueue the request
+                sendBuffer.Enqueue(_msg);
+                int index=int.MaxValue;
+                //  Waits the answer
+                if(waitAVRAnswer(_msg.reqID, index))
+                {
+                    result=receiveBuffer[index].msg;
+                    receiveBuffer.RemoveAt(index);
+                    return result;
+                }
+#endif
+                else
+                {
+                    throw new TimeoutException("Timeout getting FW Version");
+                }                
             }
             catch (Exception ex)
             {
                 throw ex;
             }
-            return string.Empty;
+            
         }
 
         /// <summary>
@@ -1099,22 +777,94 @@ namespace Arduino.Dome
             try
             {
                 //  Prepare the AVR Firmware command to request the ACK
-                string cmd = "get_ACK\r\n";
-                //  Send the command and read the answer
-                _avr.Send(cmd);
-                Thread.Sleep(100);
-                //  Reads back the answer from the AVR and checks if it is consisten
-                string res = _avr.getCOMData();
-                //  Return TRUE if the ACK is received, else return FALSE
-                if (res.Contains("ACK")) return true;
-                else if (res.Contains("Error:")) return false;
+                string cmd = BuildArduinoCommand(DomeCommands.getAck);
+                string result;
+#if USE_DOUBLE_QUEUE
+                MessageData _msg;
+                if(reqCounter++ == EncoderDummyRequest)
+                {
+                    try { reqCounter++; }
+                    catch { }
+                }
+                _msg.reqID=reqCounter;
+                _msg.msg=cmd;
+                //  Enqueue the request
+                sendBuffer.Enqueue(_msg);
+                int index=int.MaxValue;
+                //  Waits the answer
+                if(waitAVRAnswer(_msg.reqID, index))
+                {
+                    result=receiveBuffer[index].msg;
+                    receiveBuffer.RemoveAt(index);
+                    if (result.Contains("OK")) return true;
+                    else return false;
+                }
+#endif
+                else
+                {
+                    throw new TimeoutException("Timeout getting FW Version");
+                }                
             }
             catch (Exception ex)
             {
-                //throw ex;
-                return false;
+                throw ex;
+                //return false;
+            }            
+        }
+
+        public bool Slew(Direction dir)
+        {
+            try
+            {
+                string cmd;
+                //  First check in which direction to turn and build the Arduino FW command
+                if(dir==Direction.CLOCKWISE) cmd=BuildArduinoCommand(DomeCommands.TurnClockwise);
+                else cmd=BuildArduinoCommand(DomeCommands.TurnAnticlockwise);
+                string result;
+                //  Create the request ID, avoiding that it is the requestless Position gotten from encoder
+                if(reqCounter++ ==EncoderDummyRequest)
+                {
+                    try{reqCounter++;}catch {}
+                }
+#if USE_DOUBLE_QUEUE
+                MessageData _msg;
+                //  Build up the message
+                _msg.reqID=reqCounter;
+                _msg.msg=cmd;
+                //  Put the reques on the outgoing queue
+                sendBuffer.Enqueue(_msg);
+                int index=int.MaxValue;
+                //  Awaits an answer from Arduino
+                if(waitAVRAnswer(_msg.reqID, index))
+                {
+                    //  Store the answer to the slew request on a variable and
+                    //  clean up the RX queue from this request
+                    result=receiveBuffer[index].msg;
+                    receiveBuffer.RemoveAt(index);
+                }
+                else
+                {
+                    throw new TimeoutException("Timeount on Dome slewing request");
+                }
+#endif
+                //  Now check up if the Arduino correctely implement the request
+                if((dir==Direction.CLOCKWISE) && (result.Contains(DomeCommands.TurnClockwise+DomeCommands.Syntax.Space+"OK")))
+                {                    
+                    return true;
+                }
+                if((dir==Direction.ANTICLOCWISE)&&(result.Contains(DomeCommands.TurnAnticlockwise+DomeCommands.Syntax.Space+"OK")))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            return false;
+            catch(Exception ex)
+            {
+                throw ex;
+            }
         }
 
         #endregion
