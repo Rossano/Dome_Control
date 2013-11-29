@@ -253,7 +253,10 @@ namespace Arduino.Dome
         /// </value>
         public Angle DomePosition //{ get; set; }
         {
-            set;
+            set
+            {
+                DomePosition = (Angle)value;
+            }
             get
             {
                 //  Stores last Dome angle position
@@ -460,7 +463,7 @@ namespace Arduino.Dome
                 }
                 else
                 {
-                    _avr.Disconnect();
+                    _avr.Disconnect();                    
                     return true;
                 }
                 //_avr.Dispose();

@@ -91,7 +91,8 @@ namespace ASCOM.Arduino
         /// Private variable to hold the Aruidno Microcontroller driver
         /// </summary>
         private ArduinoDome _arduino;
-        public ASCOM_Telescope _telescope;
+        private bool isArduinoBootLoader;
+        public static ASCOM_Telescope _telescope;
         private double _position;
         private bool Parked;
         private double ParkPosition;
@@ -123,7 +124,10 @@ namespace ASCOM.Arduino
 
         public double Braking
         {
-            get;
+            get
+            {
+                return Braking;
+            }
             set
             {
                 Braking = value;
@@ -278,7 +282,34 @@ namespace ASCOM.Arduino
                     //connectedState = true;
                     tl.LogMessage("Connected Set", "Connecting to port " + comPort);
                     // TODO connect to the device
-                    connectedState = _arduino.Connect();
+                    string portName;
+                    using (Profile p = new Profile())
+                    {
+                        p.DeviceType = "Dome";
+                        portName = p.GetValue(driverID, "ComPort");
+                    }
+                    if (string.IsNullOrEmpty(portName))
+                    {
+                        throw new ASCOM.NotConnectedException("Dome COM port not selected");
+                    }
+                    try
+                    {
+                        if (_arduino == null)
+                        {
+                            tl.LogMessage("Connected Set", "Instantiating new Arduino object");
+                            _arduino = new ArduinoDome(comPort, isArduinoBootLoader);
+                        }
+                        connectedState = _arduino.Connect();
+                        if (!connectedState)
+                        {
+                            throw new ASCOM.NotConnectedException("Dome COM connection error");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        tl.LogMessage("Connected Set", "Exception connenting to port" + comPort);
+                        throw ex;
+                    }
                 }
                 else
                 {
@@ -503,7 +534,7 @@ namespace ASCOM.Arduino
             }
             else if (_position < 180.0)
             {
-                _arduino.Slew(Direction.CLOCWISE);
+                _arduino.Slew(Direction.CLOCKWISE);
                 while (!Parked) utilities.WaitForMilliseconds(100);
             }
             else if (_position == 0.0)
@@ -670,7 +701,7 @@ namespace ASCOM.Arduino
                 try
                 {
                     Marshal.ReleaseComObject(P);
-                    P = null;
+                    //P = null;
                 }
                 catch { }
             }
@@ -730,11 +761,42 @@ namespace ASCOM.Arduino
         /// </summary>
         private bool IsConnected
         {
+            //set
+            //{
+            //    if(value)
+            //    {
+            //        if(_arduino==null)
+            //        {
+            //            try
+            //            {
+            //                _arduino=new ArduinoDome(comPort, isArduinoBootloader);
+            //                _arduino.Connect();
+            //                connectedState=true;
+            //            }
+            //            catch(Exception ex)
+            //            {
+            //                throw ex;
+            //            }
+            //        }
+            //        else if(_arduino.GetAck())
+            //        {
+            //            connectedState=true;
+            //        }
+            //        else
+            //        {
+            //            connectedState=false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        connectedState=false;
+            //    }
+            //}
             get
             {
                 for (int i = 0; i < 10; i++)
                 {
-                    if (_arduino.getACK())
+                    if (_arduino.GetAck())
                     {
                         connectedState = true;
                         return true;

@@ -32,10 +32,10 @@ namespace ASCOM.Arduino
             this.cmdCancel = new System.Windows.Forms.Button();
             this.TelesChooseLabel = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
-            this.DomeCOMTextBox = new System.Windows.Forms.TextBox();
             this.DomeCOMLabel = new System.Windows.Forms.Label();
             this.chkTrace = new System.Windows.Forms.CheckBox();
             this.TelescopeChooserButton = new System.Windows.Forms.Button();
+            this.DomeCOMcomboBox = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -85,13 +85,6 @@ namespace ASCOM.Arduino
             this.picASCOM.Click += new System.EventHandler(this.BrowseToAscom);
             this.picASCOM.DoubleClick += new System.EventHandler(this.BrowseToAscom);
             // 
-            // DomeCOMTextBox
-            // 
-            this.DomeCOMTextBox.Location = new System.Drawing.Point(178, 20);
-            this.DomeCOMTextBox.Name = "DomeCOMTextBox";
-            this.DomeCOMTextBox.Size = new System.Drawing.Size(91, 20);
-            this.DomeCOMTextBox.TabIndex = 4;
-            // 
             // DomeCOMLabel
             // 
             this.DomeCOMLabel.AutoSize = true;
@@ -121,15 +114,24 @@ namespace ASCOM.Arduino
             this.TelescopeChooserButton.UseVisualStyleBackColor = true;
             this.TelescopeChooserButton.Click += new System.EventHandler(this.TelescopeChooserButton_Click);
             // 
+            // DomeCOMcomboBox
+            // 
+            this.DomeCOMcomboBox.FormattingEnabled = true;
+            this.DomeCOMcomboBox.Location = new System.Drawing.Point(194, 24);
+            this.DomeCOMcomboBox.Name = "DomeCOMcomboBox";
+            this.DomeCOMcomboBox.Size = new System.Drawing.Size(75, 21);
+            this.DomeCOMcomboBox.TabIndex = 8;
+            this.DomeCOMcomboBox.SelectedValueChanged += new System.EventHandler(this.DomeCOMcomboBox_SelectedValueChanged);
+            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(350, 175);
+            this.Controls.Add(this.DomeCOMcomboBox);
             this.Controls.Add(this.TelescopeChooserButton);
             this.Controls.Add(this.chkTrace);
             this.Controls.Add(this.DomeCOMLabel);
-            this.Controls.Add(this.DomeCOMTextBox);
             this.Controls.Add(this.picASCOM);
             this.Controls.Add(this.TelesChooseLabel);
             this.Controls.Add(this.cmdCancel);
@@ -153,9 +155,9 @@ namespace ASCOM.Arduino
         private System.Windows.Forms.Button cmdCancel;
         private System.Windows.Forms.Label TelesChooseLabel;
         private System.Windows.Forms.PictureBox picASCOM;
-        private System.Windows.Forms.TextBox DomeCOMTextBox;
         private System.Windows.Forms.Label DomeCOMLabel;
         private System.Windows.Forms.CheckBox chkTrace;
         private System.Windows.Forms.Button TelescopeChooserButton;
+        private System.Windows.Forms.ComboBox DomeCOMcomboBox;
     }
 }

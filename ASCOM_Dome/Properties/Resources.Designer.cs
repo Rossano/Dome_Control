@@ -67,6 +67,24 @@ namespace ASCOM.Arduino.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string cmdCancelLabel {
+            get {
+                return ResourceManager.GetString("cmdCancelLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        internal static string cmdOKLabel {
+            get {
+                return ResourceManager.GetString("cmdOKLabel", resourceCulture);
+            }
+        }
+        
         internal static System.Drawing.Icon DefaultIcon {
             get {
                 object obj = ResourceManager.GetObject("DefaultIcon", resourceCulture);
@@ -80,6 +98,15 @@ namespace ASCOM.Arduino.Properties {
         internal static string DomeCOMLabelContent {
             get {
                 return ResourceManager.GetString("DomeCOMLabelContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telescope Not Chosen.
+        /// </summary>
+        internal static string errMesgTelescopeNotChosen {
+            get {
+                return ResourceManager.GetString("errMesgTelescopeNotChosen", resourceCulture);
             }
         }
         
