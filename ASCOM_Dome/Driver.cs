@@ -90,9 +90,9 @@ namespace ASCOM.Arduino
         /// <summary>
         /// Private variable to hold the Aruidno Microcontroller driver
         /// </summary>
-        private ArduinoDome _arduino;
+        public ArduinoDome _arduino;
         private bool isArduinoBootLoader;
-        public static ASCOM_Telescope _telescope;
+        public ASCOM_Telescope _telescope;
         private double _position;
         private bool Parked;
         private double ParkPosition;
@@ -130,7 +130,7 @@ namespace ASCOM.Arduino
             }
             set
             {
-                Braking = value;
+                //Braking = value;
             }
         }
 
@@ -158,11 +158,17 @@ namespace ASCOM.Arduino
             SetupDialog();
 
             tl.LogMessage("Dome", "Starting initialisation");
-
-            connectedState = false; // Initialise connected to false
-            utilities = new Util(); //Initialise util object
-            astroUtilities = new AstroUtils(); // Initialise astro utilities object
+            
+            connectedState = false;             // Initialise connected to false
+            utilities = new Util();             //Initialise util object
+            astroUtilities = new AstroUtils();  // Initialise astro utilities object
             //TODO: Implement your additional construction here
+            using (Profile p = new Profile())
+            {
+                p.DeviceType = "Dome";
+                comPort = p.GetValue(driverID, "comPort");
+                _arduino = new ArduinoDome(comPort, isArduinoBootLoader);
+            }
             _position = 0.0;
             Parked = true;
             ParkPosition = 0.0;
@@ -200,7 +206,7 @@ namespace ASCOM.Arduino
             if (IsConnected)
                 System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
 
-            using (SetupDialogForm F = new SetupDialogForm())
+            using (SetupDialogForm F = new SetupDialogForm(_telescope))
             {
                 var result = F.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
@@ -794,16 +800,19 @@ namespace ASCOM.Arduino
             //}
             get
             {
-                for (int i = 0; i < 10; i++)
+                if (_arduino != null)
                 {
-                    if (_arduino.GetAck())
+                    for (int i = 0; i < 10; i++)
                     {
-                        connectedState = true;
-                        return true;
-                    }
-                    else
-                    {
-                        utilities.WaitForMilliseconds(10);
+                        if (_arduino.GetAck())
+                        {
+                            connectedState = true;
+                            return true;
+                        }
+                        else
+                        {
+                            utilities.WaitForMilliseconds(10);
+                        }
                     }
                 }
                 connectedState = false;

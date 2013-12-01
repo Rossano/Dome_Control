@@ -40,7 +40,8 @@ namespace Dome_Control
         #region Members
 
        // private string command;
-        
+        private MainWindow _parent;
+
         #endregion
 
         #region Constructor
@@ -53,6 +54,7 @@ namespace Dome_Control
         {
             //  Sets the Ownership of this window to the main window
             this.Owner = mainWindow;
+            _parent = (MainWindow)mainWindow;
             //  Initialize the command string buffer
             command = string.Empty;
             //  Initialize the xaml objects
@@ -108,7 +110,8 @@ namespace Dome_Control
                     string[] lines = DebugOUT_TextBox.Text.Split(delim, StringSplitOptions.RemoveEmptyEntries);
                     //  Send last line to the Arduino
                     command = lines.Last<string>();
-                    ((App)(Application.Current))._Dome_uC.SendCommand(command);
+                    //((App)(Application.Current))._Dome_uC.SendCommand(command);
+                    _parent._dome._arduino.SendCommand(command);
                 }
                 catch (NullReferenceException ex)
                 {

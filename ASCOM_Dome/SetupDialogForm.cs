@@ -9,15 +9,19 @@ using ASCOM.DeviceInterface;
 using ASCOM.Utilities;
 using ASCOM.Arduino;
 using System.IO.Ports;
+using ASCOM_Telescope_ns;
 
 namespace ASCOM.Arduino
 {
     [ComVisible(false)]					// Form not registered for COM!
     public partial class SetupDialogForm : Form
     {
-        public SetupDialogForm()
+        public ASCOM_Telescope _telescope;
+
+        public SetupDialogForm(ASCOM_Telescope telescope)
         {
             InitializeComponent();
+            _telescope = telescope;
             // Initialise current values of user settings from the ASCOM Profile 
             DomeCOMLabel.Text = Properties.Resources.DomeCOMLabelContent;
             foreach (string s in SerialPort.GetPortNames())
@@ -87,11 +91,12 @@ namespace ASCOM.Arduino
         {
             try
             {
-                Dome._telescope = new ASCOM_Telescope_ns.ASCOM_Telescope();
+                
+                _telescope = new ASCOM_Telescope_ns.ASCOM_Telescope();
             }
             catch(Exception ex)
             {
-                Dome._telescope=null;
+                _telescope=null;
                 throw ex;
             }
         }

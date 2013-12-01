@@ -255,7 +255,7 @@ namespace Arduino.Dome
         {
             set
             {
-                DomePosition = (Angle)value;
+//                DomePosition = (Angle)value;
             }
             get
             {

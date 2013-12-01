@@ -20,6 +20,7 @@ using System.IO;
 using System.IO.Ports;
 using ASCOM_Telescope_ns;
 using ASCOM.Arduino;
+using Arduino.Dome;
 using Xceed.Wpf;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Core;
@@ -37,7 +38,7 @@ namespace Dome_Control
 
         private Angle position { get; set; }
         //private ASCOM_Telescope Telescope;
-        private Dome _dome;
+        public Dome _dome;
         private uint moveStep { get; set; }
         private string revisionString = "0.1";
         private bool isArduino;
@@ -103,8 +104,8 @@ namespace Dome_Control
             //
             if (!isArduinoBootloader)
             {
-//                launchAVRDude();
-//                System.Threading.Thread.Sleep(3000);
+                launchAVRDude();
+                System.Threading.Thread.Sleep(3000);
             }
 //            this.Width = 820;
 //            this.Height = 540;
@@ -114,11 +115,11 @@ namespace Dome_Control
             //autoGroupBox.Visibility = Visibility.Collapsed;
             //autoGroupBox.IsEnabled = false;
             //mainGraph = new ZedGraphControl();
-            foreach (string s in System.IO.Ports.SerialPort.GetPortNames())
-            {
-                //ComPortComboBox.Items.Add(s);
-                AVRCOMListBox.Items.Add(s);
-            }
+            //foreach (string s in System.IO.Ports.SerialPort.GetPortNames())
+            //{
+            //    //ComPortComboBox.Items.Add(s);
+            //    AVRCOMListBox.Items.Add(s);
+            //}
             mainTimer.Interval = TimeSpan.FromSeconds(TelescopeCheckInterval_s);
             mainTimer.IsEnabled = true;
             mainTimer.Tick += mainTimer_Tick;
@@ -225,95 +226,96 @@ namespace Dome_Control
             }
         }
 
-        /// <summary>
-        /// Connection Button Click Event Handler.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void AVRConnectButton_Click(object sender, RoutedEventArgs e)
-        {
-            //  Initialize the PWM GUI element
-//            PWM_Value = (int)PWMSlider.Value;
-            //
-            //  Check if the AVR is already connected
-            //
-            if (AVRConnectButton.Content.Equals(Properties.Resources.Button_Connect))
-            {
-                //  Connect the AVR
+//        /// <summary>
+//        /// Connection Button Click Event Handler.
+//        /// </summary>
+//        /// <param name="sender">The source of the event.</param>
+//        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+//        private void AVRConnectButton_Click(object sender, RoutedEventArgs e)
+//        {
+//            //  Initialize the PWM GUI element
+////            PWM_Value = (int)PWMSlider.Value;
+//            //
+//            //  Check if the AVR is already connected
+//            //
+//            if (AVRConnectButton.Content.Equals(Properties.Resources.Button_Connect))
+//            {
+//                //  Connect the AVR
 
-                //
-                //  Initialize the AVR element
-                //
-                if (_dome == null)
-                //if (((App)(System.Windows.Application.Current))._Dome_uC == null)
-                {
-                    //((App)(System.Windows.Application.Current))._Dome_uC = new Arduino.Dome.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
-                    _dome = new Dome(AVR_COM_Name, isArduinoBootloader);
-                }
-                //
-                //  Read the Firmware Versions and show it on a MessageBox
-                //
-                string ver = _dome.DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
-                //  Parse the received string to the the useful information only
-                char[] delim = { ':', ' ', '\n' };
-                string[] tokens = ver.Split(delim);
-                int i = 0;
-                foreach (string tok in tokens)
-                {
-                    if (tok.Equals("Firmware")) break;
-                    i++;
-                }
-                //  Display the Firmware version
-                ver = "";
-                for (int j = 0; j < 7; j++)
-                {
-                    ver += tokens[i + j] + " ";
-                }
-                //  Show the AVR Firmware version into a message box
-                System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-                //
-                //  Display the Control Tab into the GUI
-                //
-                MainTab.SelectedIndex++;
-                //
-                //  Start the Timers
-                //
-                mainTimer.Start();
-//                graphTimer.Start();
+//                //
+//                //  Initialize the AVR element
+//                //
+//                if (_dome == null)
+//                //if (((App)(System.Windows.Application.Current))._Dome_uC == null)
+//                {
+//                    //((App)(System.Windows.Application.Current))._Dome_uC = new Arduino.Dome.ArduinoDome(AVR_COM_Name, isArduinoBootloader);
+//                    _dome = new Dome();
+//                    //_dome = new Dome(AVR_COM_Name, isArduinoBootloader);
+//                }
+//                //
+//                //  Read the Firmware Versions and show it on a MessageBox
+//                //
+//                string ver = _dome.DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
+//                //  Parse the received string to the the useful information only
+//                char[] delim = { ':', ' ', '\n' };
+//                string[] tokens = ver.Split(delim);
+//                int i = 0;
+//                foreach (string tok in tokens)
+//                {
+//                    if (tok.Equals("Firmware")) break;
+//                    i++;
+//                }
+//                //  Display the Firmware version
+//                ver = "";
+//                for (int j = 0; j < 7; j++)
+//                {
+//                    ver += tokens[i + j] + " ";
+//                }
+//                //  Show the AVR Firmware version into a message box
+//                System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+//                //
+//                //  Display the Control Tab into the GUI
+//                //
+//                MainTab.SelectedIndex++;
+//                //
+//                //  Start the Timers
+//                //
+//                mainTimer.Start();
+////                graphTimer.Start();
                 
-                //  Change the StatusBar Icon
-                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/ConnectedImg.png", UriKind.Relative));
-                //  Change the StatusBar labels
-                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
-                StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
-                AVRConnectButton.Content = Properties.Resources.Button_Disconnect;
-            }
-            else
-            {
-                //
-                //  Disconnect the AVR Device
-                //
-                _dome.Connected = false;
-                //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
-                //  Stops the timers
-                mainTimer.Stop();
-//                graphTimer.Stop();
-                //  Change the StatusBar Icon
-                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/DisconnectedImg.png", UriKind.Relative));
-                //  Change the StatusBar labels
-                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
-                StatusBar_Version.Content = "FW Ver. : ";
-                AVRConnectButton.Content = Properties.Resources.Button_Connect;
-                //
-                //  If it is AVR Bootloader help to get into the AVR user code via avrdude
-                //
-                if (!isArduinoBootloader)
-                {
-                    launchAVRDude();
-                    System.Threading.Thread.Sleep(3000);
-                }
-            }
-        }
+//                //  Change the StatusBar Icon
+//                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/ConnectedImg.png", UriKind.Relative));
+//                //  Change the StatusBar labels
+//                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
+//                StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
+//                AVRConnectButton.Content = Properties.Resources.Button_Disconnect;
+//            }
+//            else
+//            {
+//                //
+//                //  Disconnect the AVR Device
+//                //
+//                _dome.Connected = false;
+//                //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
+//                //  Stops the timers
+//                mainTimer.Stop();
+////                graphTimer.Stop();
+//                //  Change the StatusBar Icon
+//                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/DisconnectedImg.png", UriKind.Relative));
+//                //  Change the StatusBar labels
+//                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
+//                StatusBar_Version.Content = "FW Ver. : ";
+//                AVRConnectButton.Content = Properties.Resources.Button_Connect;
+//                //
+//                //  If it is AVR Bootloader help to get into the AVR user code via avrdude
+//                //
+//                if (!isArduinoBootloader)
+//                {
+//                    launchAVRDude();
+//                    System.Threading.Thread.Sleep(3000);
+//                }
+//            }
+//        }
 
         /// <summary>
         /// New FW Click event handler.
@@ -454,7 +456,92 @@ namespace Dome_Control
 
         private void ASCOMConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            _telescope = new ASCOM_Telescope();
+            //
+            //  Check if Dome is already connected
+            //
+            if (ASCOMConnectButton.Content.Equals(Properties.Resources.Button_Connect))
+            {
+                //  Connect the AVR
+                //
+                //  Initialize the AVR element
+                //
+                if (_dome == null)                
+                {
+                    _dome = new Dome();                    
+                }
+                //
+                //  Gets connection information to the Arduino and the telescope
+                //
+                //_dome.SetupDialog();
+                //
+                //  Connect the Arduino
+                //
+                _dome._arduino.Connect();
+                //
+                //  Read the Firmware Versions and show it on a MessageBox
+                //
+                string ver = _dome.DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
+                //  Parse the received string to the the useful information only
+                char[] delim = { ':', ' ', '\n' };
+                string[] tokens = ver.Split(delim);
+                int i = 0;
+                foreach (string tok in tokens)
+                {
+                    if (tok.Equals("Firmware")) break;
+                    i++;
+                }
+                //  Display the Firmware version
+                ver = "";
+                for (int j = 0; j < 7; j++)
+                {
+                    ver += tokens[i + j] + " ";
+                }
+                //  Show the AVR Firmware version into a message box
+                System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                //
+                //  Display the Control Tab into the GUI
+                //
+                MainTab.SelectedIndex++;
+                //
+                //  Start the Timers
+                //
+                mainTimer.Start();
+                //                graphTimer.Start();
+
+                //  Change the StatusBar Icon
+                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/ConnectedImg.png", UriKind.Relative));
+                //  Change the StatusBar labels
+                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
+                StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
+                ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+            }
+            else
+            {
+                //
+                //  Disconnect the AVR Device
+                //
+                _dome.Connected = false;
+                //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
+                //  Stops the timers
+                mainTimer.Stop();
+                //                graphTimer.Stop();
+                //  Change the StatusBar Icon
+                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/DisconnectedImg.png", UriKind.Relative));
+                //  Change the StatusBar labels
+                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
+                StatusBar_Version.Content = "FW Ver. : ";
+                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+                //
+                //  If it is AVR Bootloader help to get into the AVR user code via avrdude
+                //
+                if (!isArduinoBootloader)
+                {
+                    launchAVRDude();
+                    System.Threading.Thread.Sleep(3000);
+                }
+            }
+            
+            //_telescope = new ASCOM_Telescope();
             //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
             ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
         }

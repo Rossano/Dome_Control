@@ -99,7 +99,8 @@ namespace Dome_Control
                     {
                         int baud = nodes.Current.ValueAsInt;
                         AVR_COM_Baudrate = baud;
-                        if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setBaudrate(baud);
+                        //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setBaudrate(baud);
+                        if (_dome != null) _dome._arduino._avr.setBaudrate(baud);
                     }
                     catch (Exception ex)
                     {
@@ -144,25 +145,29 @@ namespace Dome_Control
                         case "None":
                             {
                                 AVR_COM_Stopbits = StopBits.None;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.None);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.None);
+                                if (_dome != null) _dome._arduino._avr.setStopbits(StopBits.None);
                                 break;
                             }
                         case "One":
                             {
                                 AVR_COM_Stopbits = StopBits.One;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.One);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.One);
+                                if (_dome != null) _dome._arduino._avr.setStopbits(StopBits.One);
                                 break;
                             }
                         case "OnePointFive":
                             {
                                 AVR_COM_Stopbits = StopBits.OnePointFive;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.OnePointFive);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.OnePointFive);
+                                if (_dome != null) _dome._arduino._avr.setStopbits(StopBits.OnePointFive);
                                 break;
                             }
                         case "Two":
                             {
                                 AVR_COM_Stopbits = StopBits.Two;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.Two);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setStopbits(StopBits.Two);
+                                if (_dome != null) _dome._arduino._avr.setStopbits(StopBits.Two);
                                 break;
                             }
                         default: throw new Exception("AVR COM Bad Stopbit Format");
@@ -185,31 +190,36 @@ namespace Dome_Control
                         case "None":
                             {
                                 AVR_COM_Parity = Parity.None;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.None);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.None);
+                                if (_dome != null) _dome._arduino._avr.setParity(Parity.None);
                                 break;
                             }
                         case "Even":
                             {
                                 AVR_COM_Parity = Parity.Even;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Even);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Even);
+                                if (_dome != null) _dome._arduino._avr.setParity(Parity.Even);
                                 break;
                             }
                         case "Mark":
                             {
                                 AVR_COM_Parity = Parity.Mark;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Mark);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Mark);
+                                if (_dome != null) _dome._arduino._avr.setParity(Parity.Mark);
                                 break;
                             }
                         case "Odd":
                             {
                                 AVR_COM_Parity = Parity.Odd;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Odd);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Odd);
+                                if (_dome != null) _dome._arduino._avr.setParity(Parity.Odd);
                                 break;
                             }
                         case "Space":
                             {
                                 AVR_COM_Parity = Parity.Space;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Space);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setParity(Parity.Space);
+                                if (_dome != null) _dome._arduino._avr.setParity(Parity.Space);
                                 break;
                             }
                         default: throw new Exception("AVR COM Bad Parity Format");
@@ -232,25 +242,29 @@ namespace Dome_Control
                         case "None":
                             {
                                 AVR_COM_Handshake = Handshake.None;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.None);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.None);
+                                if (_dome != null) _dome._arduino._avr.setHandshake(Handshake.None);
                                 break;
                             }
                         case "RTS":
                             {
                                 AVR_COM_Handshake = Handshake.RequestToSend;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.RequestToSend);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.RequestToSend);
+                                if (_dome != null) _dome._arduino._avr.setHandshake(Handshake.RequestToSend);
                                 break;
                             }
                         case "XonXoff":
                             {
                                 AVR_COM_Handshake = Handshake.XOnXOff;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.XOnXOff);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.XOnXOff);
+                                if (_dome != null) _dome._arduino._avr.setHandshake(Handshake.XOnXOff);
                                 break;
                             }
                         case "XonXoffRTS":
                             {
                                 AVR_COM_Handshake = Handshake.RequestToSendXOnXOff;
-                                if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.RequestToSendXOnXOff);
+                                //if (((App)(Application.Current))._Dome_uC != null) ((App)(Application.Current))._Dome_uC._avr.setHandshake(Handshake.RequestToSendXOnXOff);
+                                if (_dome != null) _dome._arduino._avr.setHandshake(Handshake.RequestToSendXOnXOff);
                                 break;
                             }
                         default: throw new Exception("AVR COM Bad Handshake Format");
@@ -590,7 +604,8 @@ namespace Dome_Control
             {
                 //
                 //  Menu Definitions
-                //
+                //           
+                
                 MenuItemFileName.Header = Properties.Resources.MenuItemFileName;
                 NewFWLabel.Header = Properties.Resources.NewFWLabel;
                 DebugLabel.Header = Properties.Resources.DebugLabel;
@@ -610,13 +625,13 @@ namespace Dome_Control
                 //  Set the Manual Tab Label
                 RunTab.Header = Properties.Resources.RunTabDef;
                 //  Get the Debug Tab Label
-                DebugTabDef = Properties.Resources.DebugTabDef;
+                DebugTabDef = Properties.Resources.DebugTabDef;                
                 //  Get the COM Port List Label
                 COMPort_Label.Content = Properties.Resources.ConnectionGroup_Label;
                 //  Get the Connection Box Label
                 Connection_Box.Header = Properties.Resources.ConnectionGroup_Label;
                 //  Get the AVR Connection Button Label
-                AVRConnectButton.Content = Properties.Resources.Button_Connect;
+//                AVRConnectButton.Content = Properties.Resources.Button_Connect;
                 Connected_Label = Properties.Resources.Button_Connect;
                 //  Get the AVR Disconnection Button Label
                 Disconnected_Label = Properties.Resources.Button_Disconnect;
