@@ -121,7 +121,7 @@ namespace Arduino.Dome
         /// <summary>
         /// Timer to synchronize the unfill the write FIFO queue
         /// </summary>
-        private DispatcherTimer runTimer;
+        private DispatcherTimer runTimer = new DispatcherTimer();
 #if USE_DOUBLE_QUEUE
         /// <summary>
         /// FIFO Queue of the write buffer
@@ -159,6 +159,7 @@ namespace Arduino.Dome
             runTimer = new DispatcherTimer();   
             runTimer.Interval = new TimeSpan(0, 0, 0, 500);
             runTimer.Tick += new EventHandler(runTimer_Tick);
+            runTimer.IsEnabled = true;
             runTimer.Start();
             //  Initialize the Input FIFO
 #if USE_DOUBLE_QUEUE
@@ -175,7 +176,7 @@ namespace Arduino.Dome
         /// Initializes a new instance of the <see cref="Peltier"/> class.
         /// </summary>
         /// <param name="com">The AVR Serial Port Name.</param>
-        public ArduinoDome(string com):base()
+        public ArduinoDome(string com)
         {        
 //#if USE_DOUBLE_QUEUE
 //            sendBuffer = new Queue<MessageData>();
@@ -193,6 +194,22 @@ namespace Arduino.Dome
             {
                 throw ex;
             }
+            DomePosition = 0.0;                                 //  Initialize Dome at Home position
+            //  Initialize the timer that checks periodically
+            //  the In/Out queues
+            runTimer = new DispatcherTimer();
+            runTimer.Interval = new TimeSpan(0, 0, 0, 500);
+            runTimer.Tick += new EventHandler(runTimer_Tick);
+            runTimer.Start();
+            //  Initialize the Input FIFO
+#if USE_DOUBLE_QUEUE
+            //  Create In/Out queues
+            sendBuffer = new Queue<MessageData>();
+            receiveBuffer = new List<MessageData>();
+#endif
+#if USE_SINGLE_QUEUE
+            avrResult = new Queue<string>();
+#endif
         }
 
         /// <summary>
@@ -200,7 +217,7 @@ namespace Arduino.Dome
         /// </summary>
         /// <param name="com">The AVR Serial Port Nale.</param>
         /// <param name="flag">if set to <c>true</c> Tells the application that AVR109 bootloader has to be used.</param>
-        public ArduinoDome(string com, bool flag):base()
+        public ArduinoDome(string com, bool flag)
         {         
             DomePosition = 0.0;
             //  Initialize the Input FIFO
@@ -220,6 +237,23 @@ namespace Arduino.Dome
             {
                 throw ex;
             }
+            DomePosition = 0.0;                                 //  Initialize Dome at Home position
+            //  Initialize the timer that checks periodically
+            //  the In/Out queues
+//            runTimer = new DispatcherTimer();
+            runTimer.Interval = new TimeSpan(0, 0, 1); //0, 500);
+            runTimer.Tick += runTimer_Tick;// new EventHandler(runTimer_Tick);
+            runTimer.IsEnabled = true;
+            runTimer.Start();
+            //  Initialize the Input FIFO
+#if USE_DOUBLE_QUEUE
+            //  Create In/Out queues
+            sendBuffer = new Queue<MessageData>();
+            receiveBuffer = new List<MessageData>();
+#endif
+#if USE_SINGLE_QUEUE
+            avrResult = new Queue<string>();
+#endif
         }
 
         #endregion
@@ -438,6 +472,7 @@ namespace Arduino.Dome
                 if (_avr != null)
                 {
                     _avr.Connect();
+                    runTimer.Start();
                     return true;
                 }
                 else return false;//throw new NullReferenceException("AVR Objcet not referenced in Peltier class");
@@ -463,7 +498,8 @@ namespace Arduino.Dome
                 }
                 else
                 {
-                    _avr.Disconnect();                    
+                    _avr.Disconnect();
+                    runTimer.Stop();
                     return true;
                 }
                 //_avr.Dispose();

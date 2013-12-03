@@ -103,6 +103,8 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+                        <Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>
                     </StackPanel>                    
                 </StackPanel>
             </TabItem>
@@ -152,8 +154,8 @@
                         <!--<Button Margin="10" Name="AVRConnectButton" Click="AVRConnectButton_Click" MinHeight="25"
                                                 MaxWidth="150" MinWidth="70" />-->
                         <Image Name="TestImage" Margin="130,30,72,72" Stretch="Uniform"  Source="{Binding Path=StatusBar_Image}" DataContext="{Binding}" />
-                        <Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
-                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>
+                        <!--<Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>-->
                     </StackPanel>
                 </GroupBox>
             </TabItem>

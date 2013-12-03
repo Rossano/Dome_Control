@@ -480,7 +480,7 @@ namespace Dome_Control
                 //
                 //  Read the Firmware Versions and show it on a MessageBox
                 //
-                string ver = _dome.DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
+                string ver = _dome._arduino.GetVersion();//DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
                 //  Parse the received string to the the useful information only
                 char[] delim = { ':', ' ', '\n' };
                 string[] tokens = ver.Split(delim);
