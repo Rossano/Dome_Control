@@ -165,14 +165,17 @@ namespace Dome_Control
             try
             {
                 DomePosition.Content = _dome.Azimuth;//((App)(System.Windows.Application.Current))._Dome_uC.GetDomePosition();
+
             }
             catch (Exception ex)
             {
                 ErrDlg("Error getting Dome Position", ex);
             }
-            if (_dome._telescope.isConnected())
+            //if (_dome._telescope.isConnected())
+            if(_dome._telescope.Connected)
             {
-                TelescopePos.Content = _dome._telescope.getAzimut();
+                //TelescopePos.Content = _dome._telescope.getAzimut();
+                TelescopePos.Content = _dome._telescope.Azimuth;
             }
             //  Checks up the AVR connection and plot an error if it is found disconnected
             if(!_dome.Connected)
@@ -476,7 +479,7 @@ namespace Dome_Control
                 //
                 //  Connect the Arduino
                 //
-                _dome._arduino.Connect();
+//                _dome._arduino.Connect();
                 //
                 //  Read the Firmware Versions and show it on a MessageBox
                 //

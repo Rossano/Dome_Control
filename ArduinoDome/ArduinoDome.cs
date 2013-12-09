@@ -1,5 +1,6 @@
-﻿#define USE_DOUBLE_QUEUE
-#undef USE_SINGLE_QUEUE
+﻿#undef USE_DOUBLE_QUEUE
+#define USE_SINGLE_QUEUE
+#define USE_SYSTEM_TIMER
 
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Text;
 using AVR_Device;
 using System.Threading;
 using System.Windows.Threading;
+using System.Timers;
 
 namespace Arduino.Dome
 {
@@ -120,8 +122,12 @@ namespace Arduino.Dome
         private ulong reqCounter = 0;
         /// <summary>
         /// Timer to synchronize the unfill the write FIFO queue
-        /// </summary>
+        /// </summary>       
+#if USE_SYSTEM_TIMER
+        private  System.Timers.Timer runTimer=new System.Timers.Timer(500);
+#else
         private DispatcherTimer runTimer = new DispatcherTimer();
+#endif
 #if USE_DOUBLE_QUEUE
         /// <summary>
         /// FIFO Queue of the write buffer
@@ -156,11 +162,18 @@ namespace Arduino.Dome
             DomePosition = 0.0;                                 //  Initialize Dome at Home position
             //  Initialize the timer that checks periodically
             //  the In/Out queues
+#if USE_DOUBLE_QUEUE
+    #if USE_SYSTEM_TIMER
+            runTimer.Elapsed += new ElapsedEventHandler(runTimer_Elapsed);
+            runTimer.Enabled = true;
+    #else
             runTimer = new DispatcherTimer();   
             runTimer.Interval = new TimeSpan(0, 0, 0, 500);
             runTimer.Tick += new EventHandler(runTimer_Tick);
             runTimer.IsEnabled = true;
             runTimer.Start();
+    #endif
+#endif
             //  Initialize the Input FIFO
 #if USE_DOUBLE_QUEUE
             //  Create In/Out queues
@@ -197,12 +210,18 @@ namespace Arduino.Dome
             DomePosition = 0.0;                                 //  Initialize Dome at Home position
             //  Initialize the timer that checks periodically
             //  the In/Out queues
+#if USE_DOUBLE_QUEUE
+    #if USE_SYSTEM_TIMER
+            runTimer.Elapsed += new ElapsedEventHandler(runTimer_Elapsed);
+            runTimer.Enabled = true;
+    #else
             runTimer = new DispatcherTimer();
             runTimer.Interval = new TimeSpan(0, 0, 0, 500);
             runTimer.Tick += new EventHandler(runTimer_Tick);
             runTimer.Start();
+    #endif
             //  Initialize the Input FIFO
-#if USE_DOUBLE_QUEUE
+//#if USE_DOUBLE_QUEUE
             //  Create In/Out queues
             sendBuffer = new Queue<MessageData>();
             receiveBuffer = new List<MessageData>();
@@ -241,16 +260,23 @@ namespace Arduino.Dome
             //  Initialize the timer that checks periodically
             //  the In/Out queues
 //            runTimer = new DispatcherTimer();
+#if USE_DOUBLE_QUEUE
+    #if USE_SYSTEM_TIMER
+            runTimer.Elapsed += new ElapsedEventHandler(runTimer_Elapsed);
+            runTimer.Enabled = true;
+    #else
             runTimer.Interval = new TimeSpan(0, 0, 1); //0, 500);
             runTimer.Tick += runTimer_Tick;// new EventHandler(runTimer_Tick);
             runTimer.IsEnabled = true;
             runTimer.Start();
+    #endif
             //  Initialize the Input FIFO
-#if USE_DOUBLE_QUEUE
+//#if USE_DOUBLE_QUEUE
             //  Create In/Out queues
             sendBuffer = new Queue<MessageData>();
             receiveBuffer = new List<MessageData>();
 #endif
+
 #if USE_SINGLE_QUEUE
             avrResult = new Queue<string>();
 #endif
@@ -260,6 +286,7 @@ namespace Arduino.Dome
 
         #region Event Handlers
 
+#if USE_DOUBLE_QUEUE
         /// <summary>
         /// RunTimer Timer Tick Event handler. This handler sends all the requests into the
         /// out queue
@@ -274,6 +301,16 @@ namespace Arduino.Dome
                 SendCommand(req);
             }
         }
+
+        private void runTimer_Elapsed(object sender, ElapsedEventArgs e)         
+        {
+            // Send all the request in queue
+            foreach (MessageData req in sendBuffer)
+            {                
+                SendCommand(req);
+            }
+        }
+#endif
 
         #endregion
 
@@ -301,6 +338,8 @@ namespace Arduino.Dome
                 //
                 try
                 {
+                    
+#if USE_DOUBLE_BUFFER
                     //  Copy the RX queue to parse
                     List<MessageData> foo = receiveBuffer;
                     //  Parse the queue trying to catch the tag "Position=" indicating
@@ -324,6 +363,31 @@ namespace Arduino.Dome
                             }
                         }
                     }
+#elif USE_SINGLE_QUEUE
+                    //  Copy the RX queue to parse
+                    Queue<string> foo = avrResult;
+                    //  Parse the queue trying to catch the tag "Position=" indicating
+                    //  a position update
+                    foreach (string s in foo)
+                    {
+                        if (s.Contains("Position="))
+                        {
+                            //  If found split the received string into its tokens and covert it
+                            //  into a double to update the property
+                            try
+                            {
+                                string[] tokens = s.Split(' ');
+                                return (Angle)Convert.ToDouble(tokens[1]);
+                            }
+                            catch (Exception)
+                            {
+                                //  In case of error restore old position and throw an exception
+                                return oldPos;
+                                throw new Exception("Error reading dome position");
+                            }
+                        }                        
+                    }
+#endif
                     //
                     //  If there are no position update into the RX queue, launch an Arduino 
                     //  command to read the position
@@ -376,6 +440,27 @@ namespace Arduino.Dome
                             throw new Exception("Timeout getting Dome position");
                             return oldPos;
                         }
+#elif USE_SINGLE_QUEUE                        
+                        //  Send the request to the Arduino
+                        _avr.Send(cmd);                        
+                        //  Awaits the answer to the position request, if it is received 
+                        //  the RX data are consumed and property update, else an exception
+                        //  is returned
+                        Thread.Sleep(100);
+                        result = _avr.getCOMData();
+                        //  Split the RX data into their tokens to consume the information
+                        char[] delim = { ' ', '=', '\r', '\n' };
+                        string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
+                        //  Try to convert the data in a double and then return the angle
+                        try
+                        {
+                            return (Angle)Convert.ToDouble(tokens[1]);
+                        }
+                        catch
+                        {
+                            throw new Exception("Error reading Dome position");
+                            return oldPos;
+                        }                        
 #endif
                     }
                     else
@@ -430,6 +515,15 @@ namespace Arduino.Dome
                     return null;
                     throw new Exception("Timeout getting Dome position");
                 }
+#elif USE_SINGLE_QUEUE
+                //  Send the request to the Arduino
+                _avr.Send(cmd);
+                //  Awaits the answer to the position request, if it is received 
+                //  the RX data are consumed and property update, else an exception
+                //  is returned
+                Thread.Sleep(100);
+                result = _avr.getCOMData();
+                return result;
 #endif
             }
         }
@@ -469,10 +563,14 @@ namespace Arduino.Dome
             //  If the AVR instance has already been instantied launch its connect method, else throw an exception
             try
             {
+                Thread.Sleep(200);
                 if (_avr != null)
                 {
-                    _avr.Connect();
+                    //_avr.Connect();
+                    //Thread.Sleep(100);
                     runTimer.Start();
+                    Thread.Sleep(100);
+                    _avr.Connect();
                     return true;
                 }
                 else return false;//throw new NullReferenceException("AVR Objcet not referenced in Peltier class");
@@ -532,7 +630,7 @@ namespace Arduino.Dome
                 Thread.Sleep(100);
                 string result = _avr.getCOMData();
                 //  Command return string
-                string foo = _msg.msg + DomeCommands.Syntax.Space + "OK";
+                string foo = _msg.msg.Remove(_msg.msg.Length - 3) + DomeCommands.Syntax.Space + "OK";
                 //  If the result contains "OK" 
                 if (result.Contains(foo))
                 {
@@ -540,7 +638,9 @@ namespace Arduino.Dome
                     MessageData data;
                     data.reqID = _msg.reqID;
                     data.msg = result;
+#if USE_DOUBLE_BUFFER
                     receiveBuffer.Add(data);
+#endif
                     return true;
                 }
                 else if (result.Contains("Error:"))
@@ -631,6 +731,7 @@ namespace Arduino.Dome
             return false;
         }
 
+#if USE_DOUBLE_BUFFER
         /// <summary>
         /// Waits ta given answer to a request from the AVR Device.
         /// </summary>
@@ -640,20 +741,25 @@ namespace Arduino.Dome
         public bool waitAVRAnswer(ulong ID, int index)
         {
             index = 0;
-            List<MessageData> foo = receiveBuffer;
+            Thread.Sleep(500);
+//            List<MessageData> foo = receiveBuffer;
             for (int i = 0; i < 100; i++)
             {
+                //List<MessageData> foo = receiveBuffer;
+                MessageData[] foo = new MessageData[100];
+                receiveBuffer.CopyTo(foo);
                 foreach (MessageData res in foo)
                 {
                     if (res.reqID == ID) return true;
                     else index++;
                 }
                 index = 0;
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
             index = int.MaxValue;
             return false;
         }
+#endif
 
         /// <summary>
         /// Initialize the Dome Instance.
@@ -663,63 +769,63 @@ namespace Arduino.Dome
 
         }
 
-        /// <summary>
-        /// Returns the Dome position.
-        /// </summary>
-        /// <returns>The Dome Angle position in string</returns>
-        /// <exception cref="System.Text.EncoderFallbackException">Timeout from getting Dome Position</exception>
-        public string GetDomePosition()
-        {
-            try
-            {                
-                //  Looks if there is already an information about position   
-                Angle oldPos=DomePosition;
-                List<MessageData>foo=receiveBuffer;
-                foreach(MessageData m in foo)
-                {
-                    if(m.msg.Contains("Position="))
-                    {
-                        try
-                        {
-                            DomePosition=(Angle)Convert.ToDouble(m.msg);
-                        }
-                        catch(Exception ex)
-                        {
+//        /// <summary>
+//        /// Returns the Dome position.
+//        /// </summary>
+//        /// <returns>The Dome Angle position in string</returns>
+//        /// <exception cref="System.Text.EncoderFallbackException">Timeout from getting Dome Position</exception>
+//        public string GetDomePosition()
+//        {
+//            try
+//            {                
+//                //  Looks if there is already an information about position   
+//                Angle oldPos=DomePosition;
+//                List<MessageData>foo=receiveBuffer;
+//                foreach(MessageData m in foo)
+//                {
+//                    if(m.msg.Contains("Position="))
+//                    {
+//                        try
+//                        {
+//                            DomePosition=(Angle)Convert.ToDouble(m.msg);
+//                        }
+//                        catch(Exception ex)
+//                        {
                             
-                        }
-                    }
-                }
-                //  Ask directly the position of the dome
-                if(DomePosition==oldPos)
-                {
-                    string cmd=string.Format("pos");
-                    string result;
-#if USE_DOUBLE_QUEUE
-                    MessageData _msg;
-                    _msg.reqID=reqCounter++;
-                    _msg.msg=cmd;
-                    sendBuffer.Enqueue(_msg);
-                    int index=int.MaxValue;
-                    if(waitAVRAnswer(_msg.reqID, index))
-                    {
-                        result=receiveBuffer[index].msg;
-                        receiveBuffer.RemoveAt(index);
-                        return result;
-                    }
-                    else throw new EncoderFallbackException("Timeout from getting Dome Position");
-#else
-                    if(sendCommand(cmd)) result=avrResult.Dequeue();
-                    else throw new Exception(avrResult.Dequeue());
-                    return result;
-#endif
-                }
-                else return DomePosition.ToString();
-            }
-            catch(Exception ex)
-            {
-                throw ex;
-            }
-        }
+//                        }
+//                    }
+//                }
+//                //  Ask directly the position of the dome
+//                if(DomePosition==oldPos)
+//                {
+//                    string cmd=string.Format("pos");
+//                    string result;
+//#if USE_DOUBLE_QUEUE
+//                    MessageData _msg;
+//                    _msg.reqID=reqCounter++;
+//                    _msg.msg=cmd;
+//                    sendBuffer.Enqueue(_msg);
+//                    int index=int.MaxValue;
+//                    if(waitAVRAnswer(_msg.reqID, index))
+//                    {
+//                        result=receiveBuffer[index].msg;
+//                        receiveBuffer.RemoveAt(index);
+//                        return result;
+//                    }
+//                    else throw new EncoderFallbackException("Timeout from getting Dome Position");
+//#else
+//                    if(sendCommand(cmd)) result=avrResult.Dequeue();
+//                    else throw new Exception(avrResult.Dequeue());
+//                    return result;
+//#endif
+//                }
+//                else return DomePosition.ToString();
+//            }
+//            catch(Exception ex)
+//            {
+//                throw ex;
+//            }
+//        }
 
         /// <summary>
         /// Method to Initialie the Peltier Cell PWM channel.
@@ -786,6 +892,7 @@ namespace Arduino.Dome
                 _msg.msg=cmd;
                 //  Enqueue the request
                 sendBuffer.Enqueue(_msg);
+                Thread.Sleep(100);
                 int index=int.MaxValue;
                 //  Waits the answer
                 if(waitAVRAnswer(_msg.reqID, index))
@@ -794,11 +901,19 @@ namespace Arduino.Dome
                     receiveBuffer.RemoveAt(index);
                     return result;
                 }
-#endif
+#elif USE_SINGLE_QUEUE
+                _avr.Send(cmd);
+                Thread.Sleep(500);
+                //  Reads back the answer from the AVR and check if it is consistent
+                string res = _avr.getCOMData();
+                //  If it contains "OK" returns the string from AVR
+                //  Else throw an exception
+                if (res.Contains(DomeCommands.getInfo + " OK")) return res;
                 else
                 {
                     throw new TimeoutException("Timeout getting FW Version");
-                }                
+                }
+#endif
             }
             catch (Exception ex)
             {
@@ -838,11 +953,20 @@ namespace Arduino.Dome
                     if (result.Contains("OK")) return true;
                     else return false;
                 }
-#endif
+#elif USE_SINGLE_QUEUE
+                _avr.Send(cmd);
+                Thread.Sleep(500);
+                //  Reads back the answer from the AVR and check if it is consistent
+                string res = _avr.getCOMData();
+                //  If it contains "OK" returns the string from AVR
+                //  Else throw an exception
+                if (res.Contains(DomeCommands.getAck + " OK")) return true;
                 else
                 {
                     throw new TimeoutException("Timeout getting FW Version");
-                }                
+                }
+#endif
+                                
             }
             catch (Exception ex)
             {
@@ -859,15 +983,15 @@ namespace Arduino.Dome
                 //  First check in which direction to turn and build the Arduino FW command
                 if(dir==Direction.CLOCKWISE) cmd=BuildArduinoCommand(DomeCommands.TurnClockwise);
                 else cmd=BuildArduinoCommand(DomeCommands.TurnAnticlockwise);
-                string result;
+                string result;                                
+#if USE_DOUBLE_QUEUE
                 //  Create the request ID, avoiding that it is the requestless Position gotten from encoder
+                MessageData _msg;
+                //  Build up the message
                 if(reqCounter++ ==EncoderDummyRequest)
                 {
                     try{reqCounter++;}catch {}
                 }
-#if USE_DOUBLE_QUEUE
-                MessageData _msg;
-                //  Build up the message
                 _msg.reqID=reqCounter;
                 _msg.msg=cmd;
                 //  Put the reques on the outgoing queue
@@ -885,8 +1009,7 @@ namespace Arduino.Dome
                 {
                     throw new TimeoutException("Timeount on Dome slewing request");
                 }
-#endif
-                //  Now check up if the Arduino correctely implement the request
+                                //  Now check up if the Arduino correctely implement the request
                 if((dir==Direction.CLOCKWISE) && (result.Contains(DomeCommands.TurnClockwise+DomeCommands.Syntax.Space+"OK")))
                 {                    
                     return true;
@@ -899,6 +1022,9 @@ namespace Arduino.Dome
                 {
                     return false;
                 }
+#elif USE_SINGLE_QUEUE
+                return SendCommand(cmd);
+#endif
             }
             catch(Exception ex)
             {

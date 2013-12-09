@@ -40,7 +40,7 @@ using ASCOM.DeviceInterface;
 using System.Globalization;
 using System.Collections;
 using Arduino.Dome;
-using ASCOM_Telescope_ns;
+//using ASCOM_Telescope_ns;
 
 namespace ASCOM.Arduino
 {
@@ -92,7 +92,8 @@ namespace ASCOM.Arduino
         /// </summary>
         public ArduinoDome _arduino;
         private bool isArduinoBootLoader;
-        public ASCOM_Telescope _telescope;
+//        public ASCOM_Telescope _telescope;
+        public ASCOM.DriverAccess.Telescope _telescope;
         private double _position;
         private bool Parked;
         private double ParkPosition;
@@ -205,8 +206,8 @@ namespace ASCOM.Arduino
             // or call a different dialog if connected
             if (IsConnected)
                 System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
-
-            using (SetupDialogForm F = new SetupDialogForm(_telescope))
+            //_telescope = new ASCOM_Telescope();            
+            using (SetupDialogForm F = new SetupDialogForm(this))//_telescope))
             {
                 var result = F.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
@@ -662,10 +663,10 @@ namespace ASCOM.Arduino
         private void DomeTimer_Tick(object sender, EventArgs e)
         {
             //  Check if the connected telescope has moved enough to need a new dome slew
-            if (Math.Abs(_telescope.azimut - _position) > Threshold)
+            if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
             {
                 //  If yes check in which direction the dome has to turn and perform the slewing
-                if (_telescope.azimut > _position)
+                if (_telescope.Azimuth > _position)
                 {
                     SlewToAzimuth(_position + Threshold);
                 }
@@ -677,6 +678,7 @@ namespace ASCOM.Arduino
         }
 
         #endregion 
+
         #region Private properties and methods
         // here are some useful properties and methods that can be used as required
         // to help with driver development
