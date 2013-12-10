@@ -431,7 +431,8 @@ namespace ASCOM.Arduino
             get
             {
                 tl.LogMessage("Azimuth Get", _position.ToString());
-                return _position;
+                //return _position;
+                return _arduino.DomePosition;
                 //throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
             }
         }

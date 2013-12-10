@@ -331,7 +331,8 @@ namespace Arduino.Dome
             get
             {
                 //  Stores last Dome angle position
-                Angle oldPos = DomePosition;
+//                Angle oldPos = DomePosition;
+                bool alreadyGotPos = false;
                 //
                 //  Look into the RX queue if the Arduino hasn't alrady
                 //  sent a position update
@@ -382,7 +383,7 @@ namespace Arduino.Dome
                             catch (Exception)
                             {
                                 //  In case of error restore old position and throw an exception
-                                return oldPos;
+//                                return oldPos;
                                 throw new Exception("Error reading dome position");
                             }
                         }                        
@@ -392,7 +393,8 @@ namespace Arduino.Dome
                     //  If there are no position update into the RX queue, launch an Arduino 
                     //  command to read the position
                     //
-                    if (oldPos == DomePosition)
+                    if(!alreadyGotPos)
+                    //if (oldPos == DomePosition)
                     {
                         //  Build up the Arduino command string for requesting the Dome position
                         string cmd = BuildArduinoCommand(DomeCommands.getPosition);
@@ -459,20 +461,21 @@ namespace Arduino.Dome
                         catch
                         {
                             throw new Exception("Error reading Dome position");
-                            return oldPos;
+//                            return oldPos;
                         }                        
 #endif
                     }
                     else
                     {
-                        return oldPos;
+ //                       return oldPos;
+                        return 0;
                     }
                 }
                 catch (Exception ex)
                 {
                     //  In case of error throw the relative exception                    
                     throw ex;
-                    return oldPos;
+ //                   return oldPos;
                 }
             }
         }

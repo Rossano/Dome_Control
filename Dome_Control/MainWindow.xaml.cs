@@ -66,6 +66,7 @@ namespace Dome_Control
         public MainWindow()
         {
             InitializeComponent();
+            _status = Status.NO_TURN;
             try
             {
                 //
@@ -504,7 +505,7 @@ namespace Dome_Control
                 //
                 //  Display the Control Tab into the GUI
                 //
-                MainTab.SelectedIndex++;
+//                MainTab.SelectedIndex++;
                 //
                 //  Start the Timers
                 //
