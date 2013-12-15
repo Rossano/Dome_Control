@@ -123,21 +123,32 @@ namespace ASCOM.Arduino
 
         #region Public Properties
 
-        public double Braking
-        {
-            get
-            {
-                return Braking;
-            }
-            set
-            {
-                //Braking = value;
-            }
-        }
+        //public double Braking
+        //{
+        //    get
+        //    {
+        //        return Braking;
+        //    }
+        //    set
+        //    {
+        //        //Braking = value;
+        //    }
+        //}
 
         public double Threshold { get; set; }
 
         public bool Synced { get; set; }
+
+        public uint motor_accelleration_time { get; set; }
+
+        public double dome_angular_speed { get; set; }
+
+        public double dome_gear_ratio { get; set; }
+
+        public uint encoder_resolution { get; set; }
+
+        public int SleewingSleepTime { get; set; }
+
                 
         #endregion
 
@@ -175,7 +186,7 @@ namespace ASCOM.Arduino
             ParkPosition = 0.0;
             IsSlewing = false;
             connectedState = false;
-            Braking = 0.0;
+//            Braking = 0.0;
             DomeTimer = new System.Windows.Threading.DispatcherTimer();
             DomeTimer.Interval = TimeSpan.FromSeconds(3);//new TimeSpan(0, 0, 3);
             DomeTimer.Tick += DomeTimer_Tick;
@@ -408,6 +419,15 @@ namespace ASCOM.Arduino
             get
             {
                 bool result;
+                double Braking = 0.0;
+                if (IsSlewing)
+                {
+                    double delta=(Angle)Math.Abs(_position);
+                    double time;
+                    time=Math.Sqrt(2*motor_accelleration_time*delta/dome_angular_speed);
+                    if (time < 2 * motor_accelleration_time) Braking = motor_accelleration_time * dome_angular_speed / 2;
+                    else Braking = delta / 2;
+                }
                 if (Math.Abs(_position) < Braking) result = true;
                 else result= false;
                 tl.LogMessage("AtHome Get:", result.ToString());
@@ -607,13 +627,24 @@ namespace ASCOM.Arduino
             {
                 throw new ASCOM.InvalidValueException("Angle Out of Range");
             }
+            Angle delta = (Angle)Math.Abs(Azimuth - _position);
+            double rotationTime = Math.Sqrt(2 * motor_accelleration_time * delta / dome_angular_speed);
+            double Braking;            
+            if (rotationTime > 2 * motor_accelleration_time)
+            {
+                Braking = motor_accelleration_time * dome_angular_speed / 2;
+            }
+            else
+            {
+                Braking = delta / 2;
+            }
             IsSlewing = true;
             if (_position < Azimuth)
             {
                 _arduino.Slew(Direction.ANTICLOCWISE);
                 while (Math.Abs(_position - Azimuth) > Braking)
                 {
-                    utilities.WaitForMilliseconds(100);
+                    utilities.WaitForMilliseconds(SleewingSleepTime);
                 }
                 _arduino.Stop();
             }
@@ -622,7 +653,7 @@ namespace ASCOM.Arduino
                 _arduino.Slew(Direction.CLOCKWISE);
                 while (Math.Abs(_position - Azimuth) > Braking)
                 {
-                    utilities.WaitForMilliseconds(100);
+                    utilities.WaitForMilliseconds(SleewingSleepTime);
                 }
                 _arduino.Stop();
             }
@@ -645,7 +676,7 @@ namespace ASCOM.Arduino
         public void SyncToAzimuth(double Azimuth)
         {
             tl.LogMessage("SyncToAzimuth", "Starting Synchronization to Azimuth");
-            DomeTimer.Start();
+            //DomeTimer.Start();
             Synced = true;
             //throw new ASCOM.MethodNotImplementedException("SyncToAzimuth");
         }
@@ -653,7 +684,7 @@ namespace ASCOM.Arduino
         public void UnsyncToAzimuth()
         {
             tl.LogMessage("UnsyncToAzimuth", "Stopping Synchroniziation to Azimouth");
-            DomeTimer.Stop();
+            //DomeTimer.Stop();
             Synced = false;
         }
 
@@ -663,17 +694,21 @@ namespace ASCOM.Arduino
 
         private void DomeTimer_Tick(object sender, EventArgs e)
         {
-            //  Check if the connected telescope has moved enough to need a new dome slew
-            if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
+            _position = _arduino.DomePosition;
+            if (Synced)
             {
-                //  If yes check in which direction the dome has to turn and perform the slewing
-                if (_telescope.Azimuth > _position)
+                //  Check if the connected telescope has moved enough to need a new dome slew
+                if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
                 {
-                    SlewToAzimuth(_position + Threshold);
-                }
-                else
-                {
-                    SlewToAzimuth(_position - Threshold);
+                    //  If yes check in which direction the dome has to turn and perform the slewing
+                    if (_telescope.Azimuth > _position)
+                    {
+                        SlewToAzimuth(_position + Threshold);
+                    }
+                    else
+                    {
+                        SlewToAzimuth(_position - Threshold);
+                    }
                 }
             }
         }

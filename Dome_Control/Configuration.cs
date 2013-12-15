@@ -337,6 +337,72 @@ namespace Dome_Control
                     res = nodes.Current.Value;
                     language = nodes.Current.Value + ".xml";
                 }
+                //----------------------------------------------------------------------
+                //
+                //  Read Encoder settings
+                //
+                //----------------------------------------------------------------------
+                //
+                //  Get Encoder Resolution
+                //
+                node = nav.Select("config/Encoder/resolution");
+                //  needs that to access the xml sub-tree
+                node.MoveNext();
+                target = node.Current;
+                nodes = target.SelectDescendants(XPathNodeType.Text, false);
+                //  Iterates all the sub-tree to get the last node
+                while (nodes.MoveNext())
+                {
+                    res = nodes.Current.Value;
+                    _enc_resolution = (uint)nodes.Current.ValueAsInt;
+                }
+                //
+                //  Get Encoder Gear Ratio
+                //
+                node = nav.Select("config/Encoder/gear_ratio");
+                //  needs that to access the xml sub-tree
+                node.MoveNext();
+                target = node.Current;
+                nodes = target.SelectDescendants(XPathNodeType.Text, false);
+                //  Iterates all the sub-tree to get the last node
+                while (nodes.MoveNext())
+                {
+                    res = nodes.Current.Value;
+                    _gear_ration = nodes.Current.ValueAsDouble;
+                }
+                //----------------------------------------------------------------------
+                //
+                //  Read Dome settings
+                //
+                //----------------------------------------------------------------------
+                //
+                //  Get Motor Accellearion time
+                //
+                node = nav.Select("config/Dome/accel_time");
+                //  needs that to access the xml sub-tree
+                node.MoveNext();
+                target = node.Current;
+                nodes = target.SelectDescendants(XPathNodeType.Text, false);
+                //  Iterates all the sub-tree to get the last node
+                while (nodes.MoveNext())
+                {
+                    res = nodes.Current.Value;
+                    _motor_accel_time = (uint)nodes.Current.ValueAsInt;
+                }
+                //
+                //  Get Dome angular Speed
+                //
+                node = nav.Select("config/Dome/angular_speed_rpm");
+                //  needs that to access the xml sub-tree
+                node.MoveNext();
+                target = node.Current;
+                nodes = target.SelectDescendants(XPathNodeType.Text, false);
+                //  Iterates all the sub-tree to get the last node
+                while (nodes.MoveNext())
+                {
+                    res = nodes.Current.Value;
+                    _motor_rpm = (uint)nodes.Current.ValueAsInt;
+                }
             }
             catch (Exception ex)
             {

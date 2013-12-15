@@ -80,12 +80,12 @@
                         <StackPanel Orientation="Vertical">
                             <Label Name="SingleDomeControl" Content="Continuous Turn" />
                             <StackPanel Orientation="Horizontal">
-                                <Button Name="SingleDomeControl_Left" Margin="03" Height="55" Width="55" MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp">
-                                    <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp" />                                        
-                                </Button>
-                                <Button Name="SingleDomeControl_Right" Margin="3" MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp">
-                                    <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png" MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp" />
-                                </Button>
+                                    <Button Name="SingleDomeControl_Left" Margin="03" Height="55" Width="55" MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp" Click="SingleDomeControl_Left_Click">
+                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp" /> 
+                                    </Button>
+                                    <Button Name="SingleDomeControl_Right" Margin="3"  > <!--MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp"-->
+                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png" MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp" /> 
+                                    </Button>
                             </StackPanel>
                         </StackPanel>
                     </Border>

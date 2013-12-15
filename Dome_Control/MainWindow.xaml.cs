@@ -46,6 +46,11 @@ namespace Dome_Control
         private string AVRBootLoader_COM;
         private bool isAuto = false;
         private uint TelescopeCheckInterval_s = 1;
+        private int SleewingSleepTime = 100;
+        private uint _motor_accel_time = 5;
+        private uint _motor_rpm = 1400;
+        private uint _enc_resolution;
+        private double _gear_ration;
         private const uint ReadingSample = 5;
         private string[] HelpPaths;
         private const string DefaultChm = "Dome_Control_Help_en-US.chm";
@@ -60,6 +65,8 @@ namespace Dome_Control
         };
         private Status _status;
         private double StartTime;
+        private bool SingleLeftButtonPressed = false;
+        private bool SingleRightButtonPressed = false;
 
         #endregion
 
@@ -86,7 +93,7 @@ namespace Dome_Control
                         // Released Version
                         ReadConfiguration();
                     }
-                }
+                }            
                 //
                 //  Using XML for language
                 //
@@ -342,6 +349,78 @@ namespace Dome_Control
             debugWnd.Show();
         }
 
+        /// <summary>
+        /// SingleDomeControl_Left control Click event Handler.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void SingleDomeControl_Left_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                /// Checks if the button has already been pressed, if yes stops the dome, else
+                /// turn on the left
+                if (SingleLeftButtonPressed)
+                {
+                    /// Checks if the dome is already turning, if yes stop it else do nothing
+                    if (_status == Status.TURN_LEFT)
+                    {
+                        _dome.Stop();
+                        _status = Status.NO_TURN;
+                    }
+                }
+                else
+                {
+                    /// Checks if the dome is stopped, if yes make it turn on left else do nothing
+                    if (_status == Status.NO_TURN)
+                    {
+                        _dome.TurnLeft();
+                        _status = Status.TURN_LEFT;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("Error slewing/stopping on left ", ex);
+            }
+        }
+
+        /// <summary>
+        /// SingleDomeControl_Right control Click event Handler.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void SingleDomeControl_Right_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                /// Checks if the button has already been pressed, if yes stops the dome, else
+                /// turn on the right.
+                if (SingleRightButtonPressed)
+                {
+                    /// Checks if the dome is already turning, if yes stop it else do nothing
+                    if (_status == Status.TURN_RIGHT)
+                    {
+                        _dome.Stop();
+                        _status = Status.NO_TURN;
+                    }
+                }
+                else
+                {
+                    /// Checks if the dome is stopped, if yes maje it turns on right else do nothing
+                    if (_status == Status.NO_TURN)
+                    {
+                        _dome.TurnRight();
+                        _status = Status.TURN_RIGHT;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("Error slewing/stopping on right ", ex);
+            }
+        }
+
         private void AVRCOMListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
@@ -473,6 +552,10 @@ namespace Dome_Control
                 {
                     _dome = new Dome();                    
                 }
+                _dome.motor_accelleration_time = _motor_accel_time;
+                _dome.dome_gear_ratio = _gear_ration;
+                _dome.dome_angular_speed = 2 * Math.PI * _motor_rpm / _gear_ration / 60;
+                _dome.encoder_resolution = _enc_resolution;
                 //
                 //  Gets connection information to the Arduino and the telescope
                 //
@@ -594,17 +677,44 @@ namespace Dome_Control
 
         private void SingleDomeControl_Right_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (_status == Status.NO_TURN)
+            //if (_status == Status.NO_TURN)
+            //{
+            //    try
+            //    {
+            //        _dome.TurnRight();
+            //        _status = Status.TURN_RIGHT;
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        ErrDlg("Error Slewing Right the Dome", ex);
+            //    }
+            //}
+            try
             {
-                try
+                /// Checks if the button has already been pressed, if yes stops the dome, else
+                /// turn on the left
+                if (SingleRightButtonPressed)
                 {
-                    _dome.TurnRight();
-                    _status = Status.TURN_RIGHT;
+                    /// Checks if the dome is already turning, if yes stop it else do nothing
+                    if (_status == Status.TURN_RIGHT)
+                    {
+                        _dome.Stop();
+                        _status = Status.NO_TURN;
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    ErrDlg("Error Slewing Right the Dome", ex);
+                    /// Checks if the dome is stopped, if yes make it turn on left else do nothing
+                    if (_status == Status.NO_TURN)
+                    {
+                        _dome.TurnRight();
+                        _status = Status.TURN_RIGHT;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("Error slewing/stopping on left ", ex);
             }
         }
 
@@ -626,19 +736,45 @@ namespace Dome_Control
 
         private void SingleDomeControl_Left_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (_status == Status.NO_TURN)
+            //if (_status == Status.NO_TURN)
+            //{
+            //    try
+            //    {
+            //        _dome.TurnLeft();
+            //        _status = Status.TURN_LEFT;
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        ErrDlg("Error slewing Left the Dome", ex);
+            //    }
+            //}
+            try
             {
-                try
+                /// Checks if the button has already been pressed, if yes stops the dome, else
+                /// turn on the left
+                if (SingleLeftButtonPressed)
                 {
-                    _dome.TurnLeft();
-                    _status = Status.TURN_LEFT;
+                    /// Checks if the dome is already turning, if yes stop it else do nothing
+                    if (_status == Status.TURN_LEFT)
+                    {
+                        _dome.Stop();
+                        _status = Status.NO_TURN;
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    ErrDlg("Error slewing Left the Dome", ex);
+                    /// Checks if the dome is stopped, if yes make it turn on left else do nothing
+                    if (_status == Status.NO_TURN)
+                    {
+                        _dome.TurnLeft();
+                        _status = Status.TURN_LEFT;
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                ErrDlg("Error slewing/stopping on left ", ex);
+            }
         }
 
         private void SingleDomeControl_Left_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -690,5 +826,6 @@ namespace Dome_Control
                 }
             }
         }
+        
     }
 }

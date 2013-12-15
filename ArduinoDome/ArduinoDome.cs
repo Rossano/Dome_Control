@@ -111,11 +111,7 @@ namespace Arduino.Dome
         #endregion
 
         #region Members
-
-        /// <summary>
-        /// The message data structure
-        /// </summary>
-        private MessageData message;
+        
         /// <summary>
         ///  counter to generate an unique message ID
         /// </summary>
@@ -130,6 +126,10 @@ namespace Arduino.Dome
 #endif
 #if USE_DOUBLE_QUEUE
         /// <summary>
+        /// The message data structure
+        /// </summary>
+        private MessageData message;
+        /// <summary>
         /// FIFO Queue of the write buffer
         /// </summary>
         private Queue<MessageData> sendBuffer;
@@ -137,7 +137,7 @@ namespace Arduino.Dome
         /// FIFO Queue of the read buffer
         /// </summary>
         private List<MessageData> receiveBuffer;
-#endif        
+#endif
         /// <summary>
         /// The Arduino object
         /// </summary>
@@ -371,14 +371,26 @@ namespace Arduino.Dome
                     //  a position update
                     foreach (string s in foo)
                     {
-                        if (s.Contains("Position="))
+                        if (s.Contains("Position"))
                         {
                             //  If found split the received string into its tokens and covert it
-                            //  into a double to update the property
+                            //  into a double to update the property                            
                             try
                             {
                                 string[] tokens = s.Split(' ');
-                                return (Angle)Convert.ToDouble(tokens[1]);
+                                IEnumerator<string> en =  (IEnumerator<string>) tokens.GetEnumerator();
+                                string lastPos = "";
+                                while (en.MoveNext())
+                                {
+                                    if (en.Current.Contains("Position"))
+                                    {
+                                        en.MoveNext();
+                                        lastPos = en.Current;
+                                    }
+                                    en.MoveNext();
+                                }
+                                return (Angle)Convert.ToDouble(lastPos);
+                                //return (Angle)Convert.ToDouble(tokens[1]);
                             }
                             catch (Exception)
                             {
@@ -455,8 +467,30 @@ namespace Arduino.Dome
                         string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
                         //  Try to convert the data in a double and then return the angle
                         try
-                        {
-                            return (Angle)Convert.ToDouble(tokens[1]);
+                        {                            
+                            //IEnumerator<string> en = (IEnumerator<string>)tokens.GetEnumerator();
+                            string lastPos = "";
+                            uint i = 0;
+                            while (i < tokens.Length)
+                            {
+                                if (tokens[i].Contains("Position"))
+                                {
+                                    i++;
+                                    lastPos = tokens[i++];
+                                }
+                                else i++;
+                            }
+                            //while (en.MoveNext())
+                            //{
+                            //    if (en.Current.Contains("Position"))
+                            //    {
+                            //        en.MoveNext();
+                            //        lastPos = en.Current;
+                            //    }
+                            //    en.MoveNext();
+                            //}
+                            return (Angle)Convert.ToDouble(lastPos);
+                            //return (Angle)Convert.ToDouble(tokens[1]);
                         }
                         catch
                         {

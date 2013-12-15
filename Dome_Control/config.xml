@@ -12,7 +12,13 @@
     <AVR_BootLoader_COM>COM7</AVR_BootLoader_COM>
   </AVR>
   <Language>English</Language>
-  <Graph>
-    
-  </Graph>
+  <Dome>
+    <accel_time>5</accel_time>
+    <angular_speed_rpm>1400</angular_speed_rpm>
+  </Dome>
+  <Encoder>
+    <type>incremental</type>
+    <resolution>100</resolution>
+    <gear_ratio>1920</gear_ratio>    
+  </Encoder>
 </config>
