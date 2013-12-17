@@ -367,6 +367,7 @@ namespace Dome_Control
                     {
                         _dome.Stop();
                         _status = Status.NO_TURN;
+                        SingleLeftButtonPressed = false;
                     }
                 }
                 else
@@ -376,6 +377,7 @@ namespace Dome_Control
                     {
                         _dome.TurnLeft();
                         _status = Status.TURN_LEFT;
+                        SingleLeftButtonPressed = true;
                     }
                 }
             }
@@ -403,6 +405,7 @@ namespace Dome_Control
                     {
                         _dome.Stop();
                         _status = Status.NO_TURN;
+                        SingleRightButtonPressed = false;
                     }
                 }
                 else
@@ -412,6 +415,7 @@ namespace Dome_Control
                     {
                         _dome.TurnRight();
                         _status = Status.TURN_RIGHT;
+                        SingleRightButtonPressed = true;
                     }
                 }
             }

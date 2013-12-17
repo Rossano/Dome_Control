@@ -377,17 +377,28 @@ namespace Arduino.Dome
                             //  into a double to update the property                            
                             try
                             {
-                                string[] tokens = s.Split(' ');
-                                IEnumerator<string> en =  (IEnumerator<string>) tokens.GetEnumerator();
+                                char[] delim = { ' ', '=', '\r', '\n' };
+                                string[] tokens = s.Split(delim, StringSplitOptions.RemoveEmptyEntries);
+                                //IEnumerator<string> en =  (IEnumerator<string>) tokens.GetEnumerator();
                                 string lastPos = "";
-                                while (en.MoveNext())
+                                //while (en.MoveNext())
+                                //{
+                                //    if (en.Current.Contains("Position"))
+                                //    {
+                                //        en.MoveNext();
+                                //        lastPos = en.Current;
+                                //    }
+                                //    en.MoveNext();
+                                //}
+                                uint i = 0;
+                                while (i < tokens.Length)
                                 {
-                                    if (en.Current.Contains("Position"))
+                                    if (tokens[i].Contains("Position"))
                                     {
-                                        en.MoveNext();
-                                        lastPos = en.Current;
+                                        i++;
+                                        lastPos = tokens[i];
                                     }
-                                    en.MoveNext();
+                                    i++;
                                 }
                                 return (Angle)Convert.ToDouble(lastPos);
                                 //return (Angle)Convert.ToDouble(tokens[1]);
@@ -395,8 +406,12 @@ namespace Arduino.Dome
                             catch (Exception)
                             {
                                 //  In case of error restore old position and throw an exception
-//                                return oldPos;
+                                //                                return oldPos;
                                 throw new Exception("Error reading dome position");
+                            }
+                            finally
+                            {
+                                avrResult.Clear();
                             }
                         }                        
                     }
