@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
   <AVR>
     <COM>COM19</COM>
@@ -19,6 +19,7 @@
   <Encoder>
     <type>incremental</type>
     <resolution>100</resolution>
-    <gear_ratio>1920</gear_ratio>    
+    <gear_ratio>1920</gear_ratio>
+    <LastPosition>96722</LastPosition>
   </Encoder>
 </config>

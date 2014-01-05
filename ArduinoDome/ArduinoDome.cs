@@ -82,6 +82,10 @@ namespace Arduino.Dome
                 public static string CR = "\r\n'";
             }
             /// <summary>
+            /// Command to initialize the Dome position
+            /// </summary>
+            public static string setPosition = "set_pos";
+            /// <summary>
             /// Command to turn anticlockwise
             /// </summary>
             public static string TurnAnticlockwise = "turn_left";
@@ -105,6 +109,13 @@ namespace Arduino.Dome
             /// Command to get FW info
             /// </summary>
             public static string getInfo = "info";
+            /// <summary>
+            /// Command to config the dome
+            /// </summary>
+            public static string gearCfg = "gear_config";
+            /// <summary>
+            /// Command to respond to an ACK request
+            /// </summary>
             public static string getAck = "get_ACK";
         }
 
@@ -1081,6 +1092,28 @@ namespace Arduino.Dome
             catch(Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        public bool GearConfig(uint enc, double gear)
+        {
+            try
+            {
+                string cmd = BuildArduinoCommand(DomeCommands.gearCfg, string.Format("{0} {1}", enc, gear.ToString("F8")));
+                if(SendCommand(cmd))
+                {
+                    avrResult.Dequeue();
+                    return true;
+                }
+                else
+                {
+                    avrResult.Dequeue();
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 

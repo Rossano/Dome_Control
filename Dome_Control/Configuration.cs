@@ -368,7 +368,7 @@ namespace Dome_Control
                 while (nodes.MoveNext())
                 {
                     res = nodes.Current.Value;
-                    _gear_ration = nodes.Current.ValueAsDouble;
+                    _gear_ratio = nodes.Current.ValueAsDouble;
                 }
                 //----------------------------------------------------------------------
                 //
@@ -707,6 +707,7 @@ namespace Dome_Control
                 DomePositionLabel.Content = Properties.Resources.DomePositionLabel;
                 TelescopeLabel.Content = Properties.Resources.TelescopeLabel;
                 AngleDiffLabel.Content = Properties.Resources.AngleDiffLabel;
+                SyncCheckBox.Content = Properties.Resources.DomeSyncLabel;
                 //  Get the Control Mode Label
                 //CntMode_GroupBox.Header = Properties.Resources.ControlMode_Label;
                 ////  Get the Manual Control Mode Label

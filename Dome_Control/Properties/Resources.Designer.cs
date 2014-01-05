@@ -76,13 +76,6 @@ namespace Dome_Control.Properties {
             }
         }
         
-        internal static System.Drawing.Icon ARA2 {
-            get {
-                object obj = ResourceManager.GetObject("ARA2", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
         internal static System.Drawing.Bitmap AstroIcon1 {
             get {
                 object obj = ResourceManager.GetObject("AstroIcon1", resourceCulture);
@@ -200,6 +193,15 @@ namespace Dome_Control.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Synchronize Position with Telescope.
+        /// </summary>
+        internal static string DomeSyncLabel {
+            get {
+                return ResourceManager.GetString("DomeSyncLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download.
         /// </summary>
         internal static string DownloadButton {
@@ -244,9 +246,9 @@ namespace Dome_Control.Properties {
             }
         }
         
-        internal static System.Drawing.Bitmap LeftArrow {
+        internal static System.Drawing.Bitmap leftarrow {
             get {
-                object obj = ResourceManager.GetObject("LeftArrow", resourceCulture);
+                object obj = ResourceManager.GetObject("leftarrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -323,9 +325,9 @@ namespace Dome_Control.Properties {
             }
         }
         
-        internal static System.Drawing.Bitmap RightArrow {
+        internal static System.Drawing.Bitmap rightarrow {
             get {
-                object obj = ResourceManager.GetObject("RightArrow", resourceCulture);
+                object obj = ResourceManager.GetObject("rightarrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -354,6 +356,13 @@ namespace Dome_Control.Properties {
         internal static string StatusBar_Disconnected {
             get {
                 return ResourceManager.GetString("StatusBar_Disconnected", resourceCulture);
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Stop {
+            get {
+                object obj = ResourceManager.GetObject("Stop", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

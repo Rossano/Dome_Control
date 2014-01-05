@@ -181,10 +181,12 @@ namespace ASCOM.Arduino
                 comPort = p.GetValue(driverID, "comPort");
                 _arduino = new ArduinoDome(comPort, isArduinoBootLoader);
             }
+            RegisterASCOM((Type)null);
             _position = 0.0;
             Parked = true;
             ParkPosition = 0.0;
             IsSlewing = false;
+            Threshold = 2.0;
             connectedState = false;
 //            Braking = 0.0;
             DomeTimer = new System.Windows.Threading.DispatcherTimer();
@@ -629,7 +631,7 @@ namespace ASCOM.Arduino
             }
             Angle delta = (Angle)Math.Abs(Azimuth - _position);
             double rotationTime = Math.Sqrt(2 * motor_accelleration_time * delta / dome_angular_speed);
-            double Braking;            
+            double Braking;
             if (rotationTime > 2 * motor_accelleration_time)
             {
                 Braking = motor_accelleration_time * dome_angular_speed / 2;
@@ -638,25 +640,37 @@ namespace ASCOM.Arduino
             {
                 Braking = delta / 2;
             }
+            double theta = 360 * _position / encoder_resolution / dome_gear_ratio;
             IsSlewing = true;
+            //if (theta < Azimuth)
             if (_position < Azimuth)
             {
                 _arduino.Slew(Direction.ANTICLOCWISE);
-                while (Math.Abs(_position - Azimuth) > Braking)
+                while (Math.Abs(theta - Azimuth) > Braking)
+                //while (Math.Abs(_position - Azimuth) > Braking)
                 {
                     utilities.WaitForMilliseconds(SleewingSleepTime);
+                    //_position = this.Azimuth;
+                    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
                 }
                 _arduino.Stop();
             }
+            //else if (theta > Azimuth)
             else if (_position > Azimuth)
             {
                 _arduino.Slew(Direction.CLOCKWISE);
-                while (Math.Abs(_position - Azimuth) > Braking)
+                while (Math.Abs(theta - Azimuth) > Braking)
+                //while (Math.Abs(_position - Azimuth) > Braking)
                 {
                     utilities.WaitForMilliseconds(SleewingSleepTime);
+                    //_position = this.Azimuth;
+                    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
                 }
                 _arduino.Stop();
             }
+            //else if (Math.Abs(theta - Azimuth) < Braking)
             else if (Math.Abs(_position - Azimuth) < Braking)
             {
 
@@ -676,7 +690,7 @@ namespace ASCOM.Arduino
         public void SyncToAzimuth(double Azimuth)
         {
             tl.LogMessage("SyncToAzimuth", "Starting Synchronization to Azimuth");
-            //DomeTimer.Start();
+            DomeTimer.Start();
             Synced = true;
             //throw new ASCOM.MethodNotImplementedException("SyncToAzimuth");
         }
@@ -684,7 +698,7 @@ namespace ASCOM.Arduino
         public void UnsyncToAzimuth()
         {
             tl.LogMessage("UnsyncToAzimuth", "Stopping Synchroniziation to Azimouth");
-            //DomeTimer.Stop();
+            DomeTimer.Stop();
             Synced = false;
         }
 
@@ -695,19 +709,24 @@ namespace ASCOM.Arduino
         private void DomeTimer_Tick(object sender, EventArgs e)
         {
             _position = _arduino.DomePosition;
+            Angle theta = _position * 360 / encoder_resolution / dome_gear_ratio;
             if (Synced)
             {
                 //  Check if the connected telescope has moved enough to need a new dome slew
-                if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
+                if (Math.Abs(_telescope.Azimuth - theta) > Threshold)
+                //if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
                 {
                     //  If yes check in which direction the dome has to turn and perform the slewing
-                    if (_telescope.Azimuth > _position)
+                    if (_telescope.Azimuth > theta)
+                    //if (_telescope.Azimuth > _position)
                     {
-                        SlewToAzimuth(_position + Threshold);
+                        //SlewToAzimuth(_position + Threshold);
+                        SlewToAzimuth(_telescope.Azimuth + Threshold);// theta + Threshold);
                     }
                     else
                     {
-                        SlewToAzimuth(_position - Threshold);
+                        SlewToAzimuth(_telescope.Azimuth - Threshold); //theta - Threshold);
+                        //SlewToAzimuth(_position - Threshold);
                     }
                 }
             }
@@ -923,6 +942,15 @@ namespace ASCOM.Arduino
             {
                 _arduino.Stop();
                 IsSlewing = false;
+            }
+        }
+
+        public void configureFirmware()
+        {
+            tl.LogMessage("Configure Firmware", string.Format("Encoder Resolution = {0}\tGear Ratio = {1}", encoder_resolution, dome_gear_ratio));
+            if (_arduino.GearConfig(encoder_resolution, dome_gear_ratio) == false)
+            {
+                throw new Exception("Dome badly configured");
             }
         }
 

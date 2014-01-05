@@ -18,7 +18,8 @@ using System.Windows.Threading;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
-using ASCOM_Telescope_ns;
+using System.Xml.Linq;
+//using ASCOM_Telescope_ns;
 using ASCOM.Arduino;
 using Arduino.Dome;
 using Xceed.Wpf;
@@ -50,7 +51,7 @@ namespace Dome_Control
         private uint _motor_accel_time = 5;
         private uint _motor_rpm = 1400;
         private uint _enc_resolution;
-        private double _gear_ration;
+        private double _gear_ratio;
         private const uint ReadingSample = 5;
         private string[] HelpPaths;
         private const string DefaultChm = "Dome_Control_Help_en-US.chm";
@@ -67,12 +68,48 @@ namespace Dome_Control
         private double StartTime;
         private bool SingleLeftButtonPressed = false;
         private bool SingleRightButtonPressed = false;
+        private string configFilename;
 
         #endregion
+
+        /// <summary>
+        /// Load a resource WPF-BitmapImage (png, bmp, ...) from embedded resource defined as 'Resource' not as 'Embedded resource'.
+        /// </summary>
+        /// <param name="pathInApplication">Path without starting slash</param>
+        /// <param name="assembly">Usually 'Assembly.GetExecutingAssembly()'. If not mentionned, I will use the calling assembly</param>
+        /// <returns></returns>
+        public static BitmapImage LoadBitmapFromResource(string pathInApplication, Assembly assembly = null)
+        {
+            if (assembly == null)
+            {
+                assembly = Assembly.GetCallingAssembly();
+            }
+
+            if (pathInApplication[0] == '/')
+            {
+                pathInApplication = pathInApplication.Substring(1);
+            }
+            return new BitmapImage(new Uri(@"pack://application:,,,/" + assembly.GetName().Name + ";component/" + pathInApplication, UriKind.Absolute));
+        }
 
         public MainWindow()
         {
             InitializeComponent();
+            try
+            {
+                //Image1.Source = new BitmapImage(new Uri(@"././images/LeftArrow.png", UriKind.Relative));
+                //Image2.Source = new BitmapImage(new Uri(@"././images/RightArrow.png", UriKind.Relative));
+                //Image3.Source = new BitmapImage(new Uri(@"images/LeftArrow.png", UriKind.Relative));
+                //Image4.Source = new BitmapImage(new Uri(@"./images/RightArrow.png", UriKind.Relative));
+                //Image5.Source = new BitmapImage(new Uri(@"./images/Stop.png", UriKind.Relative));
+                //Image1.Source = LoadBitmapFromResource("Images/LeftArrow.png");
+                Uri uri = new Uri("pack://application:,,,/Images/LeftArrow.png");
+                Image1.Source = new BitmapImage(uri);
+                Image2.Source = new BitmapImage(new Uri("pack://application:,,,/Images/RightArrow.png"));
+                Image4.Source = Image1.Source;
+                Image5.Source = new BitmapImage(new Uri("pack://application:,,,,/Images/Stop.png"));
+            }
+            catch { }
             _status = Status.NO_TURN;
             try
             {
@@ -83,7 +120,7 @@ namespace Dome_Control
                 if (File.Exists(configXml))
                 {
                     // Development Version
-                    ReadConfiguration();
+                    ReadConfiguration();                    
                 }
                 else
                 {
@@ -93,7 +130,8 @@ namespace Dome_Control
                         // Released Version
                         ReadConfiguration();
                     }
-                }            
+                }
+                configFilename = configXml;
                 //
                 //  Using XML for language
                 //
@@ -135,7 +173,7 @@ namespace Dome_Control
             StartTime = Environment.TickCount;
             try
             {
-                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/DisconnectedImg.png", UriKind.Relative));
+                ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
                 Connected_Label = Properties.Resources.StatusBar_Disconnected;
                 ConnectionStatusLabel.Content = Connected_Label;                
                 //ConnectioStatusLabel.Content = Disconnected_Label;                
@@ -169,11 +207,15 @@ namespace Dome_Control
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void mainTimer_Tick(object sender, EventArgs e)
         {
+            long pos;
+            double foo = 0;
             //  Gets the Telescope/Dome position and plots them
             try
             {
-                DomePosition.Content = _dome.Azimuth;//((App)(System.Windows.Application.Current))._Dome_uC.GetDomePosition();
-
+                foo = _dome.Azimuth;
+                pos = Convert.ToInt64(foo);
+                DomePosition.Content = (360 * foo / _enc_resolution / _gear_ratio).ToString("F6");
+                writeLastDomePosition(pos);
             }
             catch (Exception ex)
             {
@@ -184,6 +226,7 @@ namespace Dome_Control
             {
                 //TelescopePos.Content = _dome._telescope.getAzimut();
                 TelescopePos.Content = _dome._telescope.Azimuth;
+                AngleDiff.Content = (360 * foo / _enc_resolution / _gear_ratio - _dome._telescope.Azimuth).ToString("F6");
             }
             //  Checks up the AVR connection and plot an error if it is found disconnected
             if(!_dome.Connected)
@@ -192,7 +235,7 @@ namespace Dome_Control
                 ConnectionStatusLabel.Content = Disconnected_Label;
                 ErrDlg("Error: AVR disconnected", new Exception());
                 mainTimer.Stop();                
-            }
+            }            
         }
 
         /// <summary>
@@ -233,7 +276,7 @@ namespace Dome_Control
             }
             catch (Exception ex)
             {
-                ErrDlg("Invalid Baudrate Selection", (Exception)null);
+                ErrDlg("Invalid Baudrate Selection", ex);
             }
         }
 
@@ -543,98 +586,106 @@ namespace Dome_Control
 
         private void ASCOMConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            //
-            //  Check if Dome is already connected
-            //
-            if (ASCOMConnectButton.Content.Equals(Properties.Resources.Button_Connect))
+            try
             {
-                //  Connect the AVR
                 //
-                //  Initialize the AVR element
+                //  Check if Dome is already connected
                 //
-                if (_dome == null)                
+                if (ASCOMConnectButton.Content.Equals(Properties.Resources.Button_Connect))
                 {
-                    _dome = new Dome();                    
-                }
-                _dome.motor_accelleration_time = _motor_accel_time;
-                _dome.dome_gear_ratio = _gear_ration;
-                _dome.dome_angular_speed = 2 * Math.PI * _motor_rpm / _gear_ration / 60;
-                _dome.encoder_resolution = _enc_resolution;
-                //
-                //  Gets connection information to the Arduino and the telescope
-                //
-                //_dome.SetupDialog();
-                //
-                //  Connect the Arduino
-                //
-//                _dome._arduino.Connect();
-                //
-                //  Read the Firmware Versions and show it on a MessageBox
-                //
-                string ver = _dome._arduino.GetVersion();//DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
-                //  Parse the received string to the the useful information only
-                char[] delim = { ':', ' ', '\n' };
-                string[] tokens = ver.Split(delim);
-                int i = 0;
-                foreach (string tok in tokens)
-                {
-                    if (tok.Equals("Firmware")) break;
-                    i++;
-                }
-                //  Display the Firmware version
-                ver = "";
-                for (int j = 0; j < 7; j++)
-                {
-                    ver += tokens[i + j] + " ";
-                }
-                //  Show the AVR Firmware version into a message box
-                System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-                //
-                //  Display the Control Tab into the GUI
-                //
-//                MainTab.SelectedIndex++;
-                //
-                //  Start the Timers
-                //
-                mainTimer.Start();
-                //                graphTimer.Start();
+                    //  Connect the AVR
+                    //
+                    //  Initialize the AVR element
+                    //
+                    if (_dome == null)
+                    {
+                        _dome = new Dome();
+                    }
+                    _dome.motor_accelleration_time = _motor_accel_time;
+                    _dome.dome_gear_ratio = _gear_ratio;
+                    _dome.dome_angular_speed = 2 * Math.PI * _motor_rpm / _gear_ratio / 60;
+                    _dome.encoder_resolution = _enc_resolution;
+                    _dome.configureFirmware();
+                    //
+                    //  Gets connection information to the Arduino and the telescope
+                    //
+                    //_dome.SetupDialog();
+                    //
+                    //  Connect the Arduino
+                    //
+                    //                _dome._arduino.Connect();
+                    //
+                    //  Read the Firmware Versions and show it on a MessageBox
+                    //
+                    string ver = _dome._arduino.GetVersion();//DriverVersion;// ((App)(System.Windows.Application.Current))._Dome_uC.GetVersion();
+                    //  Parse the received string to the the useful information only
+                    char[] delim = { ':', ' ', '\n' };
+                    string[] tokens = ver.Split(delim);
+                    int i = 0;
+                    foreach (string tok in tokens)
+                    {
+                        if (tok.Equals("Firmware")) break;
+                        i++;
+                    }
+                    //  Display the Firmware version
+                    ver = "";
+                    for (int j = 0; j < 7; j++)
+                    {
+                        ver += tokens[i + j] + " ";
+                    }
+                    //  Show the AVR Firmware version into a message box
+                    System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //
+                    //  Display the Control Tab into the GUI
+                    //
+                    //                MainTab.SelectedIndex++;
+                    //
+                    //  Start the Timers
+                    //
+                    mainTimer.Start();
+                    //                graphTimer.Start();
 
-                //  Change the StatusBar Icon
-                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/ConnectedImg.png", UriKind.Relative));
-                //  Change the StatusBar labels
-                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
-                StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
+                    //  Change the StatusBar Icon
+                    ConnectionImage.Source = new BitmapImage(new Uri(@"./images/ConnectedImg.png", UriKind.Relative));
+                    //  Change the StatusBar labels
+                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
+                    StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
+                    ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+                }
+                else
+                {
+                    //
+                    //  Disconnect the AVR Device
+                    //
+                    _dome.Connected = false;
+                    //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
+                    //  Stops the timers
+                    mainTimer.Stop();
+                    //                graphTimer.Stop();
+                    //  Change the StatusBar Icon
+                    ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
+                    //  Change the StatusBar labels
+                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
+                    StatusBar_Version.Content = "FW Ver. : ";
+                    ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+                    //
+                    //  If it is AVR Bootloader help to get into the AVR user code via avrdude
+                    //
+                    if (!isArduinoBootloader)
+                    {
+                        launchAVRDude();
+                        System.Threading.Thread.Sleep(3000);
+                    }
+                }
+
+                //_telescope = new ASCOM_Telescope();
+                //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
                 ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
             }
-            else
+            catch (Exception ex)
             {
-                //
-                //  Disconnect the AVR Device
-                //
-                _dome.Connected = false;
-                //((App)(System.Windows.Application.Current))._Dome_uC.Disconnect();
-                //  Stops the timers
-                mainTimer.Stop();
-                //                graphTimer.Stop();
-                //  Change the StatusBar Icon
-                ConnectionImage.Source = new BitmapImage(new Uri(@"/images/DisconnectedImg.png", UriKind.Relative));
-                //  Change the StatusBar labels
-                ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
-                StatusBar_Version.Content = "FW Ver. : ";
-                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
-                //
-                //  If it is AVR Bootloader help to get into the AVR user code via avrdude
-                //
-                if (!isArduinoBootloader)
-                {
-                    launchAVRDude();
-                    System.Threading.Thread.Sleep(3000);
-                }
+                ErrDlg("Error Opening ASCOM or Arduino", ex);
             }
-            
-            //_telescope = new ASCOM_Telescope();
-            //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
-            ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
         }
 
         /// <summary>
@@ -831,5 +882,53 @@ namespace Dome_Control
             }
         }
         
+        private void writeLastDomePosition(long pos)
+        {
+            try
+            {
+                XDocument config = XDocument.Load(configXml);
+
+                var nodes = from node in config.Descendants("Encoder")
+                           // where node.Element("LastPosition").Value == "LastPosition"
+                            select node;
+                foreach (XElement el in nodes)
+                {
+                    el.SetElementValue("LastPosition", pos.ToString());
+                }
+                config.Save(configXml);
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_status == Status.TURN_LEFT || _status == Status.TURN_RIGHT)
+                {
+                    _dome.Stop();
+                    _status = Status.NO_TURN;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private void SyncCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            ///
+            /// To maintein compatibility with ASCOM dome driver it is passed as parameter the 
+            /// telescope position, although this information is already available into the 
+            /// Dome driver
+            /// 
+            //_dome.Synced = (bool)SyncCheckBox.IsChecked;
+            if ((bool)SyncCheckBox.IsChecked) _dome.SyncToAzimuth(_dome._telescope.Azimuth);
+            else _dome.UnsyncToAzimuth();
+        }
     }
 }

@@ -6,7 +6,7 @@
         Title="MainWindow" Height="350" Width="450" MinHeight="540" MinWidth="500" SizeChanged="Window_SizeChanged"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Icon="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/ARA2.ico">
+        SizeToContent="WidthAndHeight" Loaded="Window_Loaded" >
     <!-- Command Binding Definition for Custom commands -->
     <Window.CommandBindings>
         <!-- Help Command Binding-->
@@ -42,6 +42,8 @@
                 </Setter.Value>
             </Setter>
         </Style>        
+        <!--<ImageBrush x:Key="LeftArrowImage" ImageSource="images/leftarrow.png" />
+        <ImageBrush x:Key="RightArrowImage" ImageSource="/images/RightArrow.png" />-->
     </Window.Resources>
 
     <Grid Height="Auto">
@@ -96,6 +98,7 @@
                             <Label Name="AngleDiffLabel" Width="100" />
                             <Label Name="AngleDiff" Width="100" />
                         </StackPanel>
+                        <CheckBox Name="SyncCheckBox" Margin="10" Content="" IsChecked="False" Checked="SyncCheckBox_Checked"/>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">                             
@@ -107,10 +110,10 @@
                                         <Image Height="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" />
                                     </Button>-->
                                     <Button Name="SingleDomeControl_Left" Margin="03" Height="55" Width="55" Click="SingleDomeControl_Left_Click" Opacity="1" > <!--MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp"-->
-                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png"  /> <!--MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp"-->
+                                        <Image Height="50" Width="50" Name="Image1" Source="{DynamicResource LeftArrowImage}" /> <!--MouseLeftButtonDown="SingleDomeControl_Left_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Left_MouseLeftButtonUp"-->
                                     </Button>
                                     <Button Name="SingleDomeControl_Right" Margin="3" Opacity="1" Click="SingleDomeControl_Right_Click" > <!--MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp"-->
-                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png"  /> <!--MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp"-->
+                                        <Image Height="50" Width="50" Name="Image2" Source="{}DynamicResource RightArrowImage}" /> <!--MouseLeftButtonDown="SingleDomeControl_Right_MouseLeftButtonDown" MouseLeftButtonUp="SingleDomeControl_Right_MouseLeftButtonUp"-->
                                     </Button>
                             </StackPanel>
                         </StackPanel>
@@ -120,15 +123,18 @@
                                 <Label Name="MultipleDomeConstrol" Content="Multiple Step Control" />
                                 <StackPanel Orientation="Horizontal">
                                     <Button Name="MultiDomeControl_Left" Margin="3" Height="55" Width="55" Click="MultiDomeControl_Left_Click">
-                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/LeftArrow.png" />
+                                        <Image Height="50" Width="50" Name="Image4" Source=" images/LeftArrow.png"/>
                                     </Button>
                                     <Button Name="MultiDomeControl_Right" Margin="3" Height="55" Width="55" Click="MultiDomeControl_Right_Click">
-                                        <Image Height="50" Width="50" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/RightArrow.png" />
+                                        <Image Height="50" Width="50" Name="Image3" />
                                     </Button>
                                     
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+                        <Button Name="StopButton" Margin="3" Height="60" Width="70" Click="StopButton_Click">
+                            <Image Height="50" Width="70" Name="Image5" />
+                        </Button>
                         <Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
                                                 MaxWidth="150" MinWidth="70"  Content="ASCOM"/>
                     </StackPanel>                    
