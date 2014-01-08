@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
+using System.ComponentModel;
 
 using ASCOM;
 using ASCOM.Astrometry;
@@ -99,6 +100,7 @@ namespace ASCOM.Arduino
         private double ParkPosition;
         private bool IsSlewing;
         private System.Windows.Threading.DispatcherTimer DomeTimer;
+        private BackgroundWorker slewThread = new BackgroundWorker();
         /// <summary>
         /// Private variable to hold the connected state
         /// </summary>
@@ -195,6 +197,10 @@ namespace ASCOM.Arduino
             DomeTimer.IsEnabled = true;
             DomeTimer.Stop();
 
+            slewThread.WorkerReportsProgress = false;
+            slewThread.WorkerSupportsCancellation = true;
+            slewThread.DoWork+=new DoWorkEventHandler(slewThread_Body);
+            slewThread.RunWorkerCompleted+=new RunWorkerCompletedEventHandler(slewThread_Completed);
             tl.LogMessage("Dome", "Completed initialisation");
         }
 
@@ -402,7 +408,11 @@ namespace ASCOM.Arduino
 
         public void AbortSlew()
         {
-            _arduino.Stop();
+            if (IsSlewing)
+            {
+                _arduino.Stop();
+                IsSlewing = false;
+            }
             // This is a mandatory parameter but we have no action to take in this simple driver
             tl.LogMessage("AbortSlew", "Completed");
         }
@@ -621,14 +631,27 @@ namespace ASCOM.Arduino
             throw new ASCOM.MethodNotImplementedException("SlewToAltitude");            
         }
 
+        /// <summary>
+        /// Slew the dome to the given azimuth position.
+        /// This method slews the dome to the given Azimuth. Slewing is performed on a secondary thread in order
+        /// to avoid locking the main thread.
+        /// </summary>
+        /// <param name="Azimuth">Target azimuth (degrees, North zero and increasing clockwise. i.e., 90 East, 180 South, 270 West)</param>
+        /// <exception cref="ASCOM.InvalidValueException">Angle Out of Range</exception>
+        /// <remarks>
+        /// Raises an error if <see cref="P:ASCOM.DeviceInterface.IDomeV2.Slaved" /> is True, if not supported, if a communications failure occurs,
+        /// or if the dome can not reach indicated azimuth.
+        /// </remarks>
         public void SlewToAzimuth(double Azimuth)
         {
             tl.LogMessage("SlewToAzimuth", Azimuth.ToString());
             //throw new ASCOM.MethodNotImplementedException("SlewToAzimuth");
+            //  Checks if the angle is valid
             if (Azimuth > 360 || Azimuth < 0)
             {
                 throw new ASCOM.InvalidValueException("Angle Out of Range");
             }
+            //  Estimate when to stop the slewing command based on speed position and target position
             Angle delta = (Angle)Math.Abs(Azimuth - _position);
             double rotationTime = Math.Sqrt(2 * motor_accelleration_time * delta / dome_angular_speed);
             double Braking;
@@ -640,42 +663,57 @@ namespace ASCOM.Arduino
             {
                 Braking = delta / 2;
             }
+            tl.LogMessage("SlewToAzimuth", "Braking = " + Braking.ToString());
             double theta = 360 * _position / encoder_resolution / dome_gear_ratio;
             IsSlewing = true;
             //if (theta < Azimuth)
+            //  Checks if it is shorter to turn anticlockwise, if yes slew anticlockwise
             if (_position < Azimuth)
             {
+                //  Slew ANTICLOCKWISE
+                tl.LogMessage("SlewToAzimuth", "Slewing ANTICLOCKWISE");
+                IsSlewing = true;
+                double[] args = { Azimuth, Braking };
                 _arduino.Slew(Direction.ANTICLOCWISE);
-                while (Math.Abs(theta - Azimuth) > Braking)
-                //while (Math.Abs(_position - Azimuth) > Braking)
-                {
-                    utilities.WaitForMilliseconds(SleewingSleepTime);
-                    //_position = this.Azimuth;
-                    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
-                    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
-                }
-                _arduino.Stop();
+                slewThread.RunWorkerAsync(args);
+                //_arduino.Slew(Direction.ANTICLOCWISE);
+                //while (Math.Abs(theta - Azimuth) > Braking)
+                ////while (Math.Abs(_position - Azimuth) > Braking)
+                //{
+                //    utilities.WaitForMilliseconds(SleewingSleepTime);
+                //    //_position = this.Azimuth;
+                //    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                //    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
+                //}
+                //_arduino.Stop();
             }
             //else if (theta > Azimuth)
+            //  Checks if it is shorter to turn clockwise, if yes slew clockwise
             else if (_position > Azimuth)
             {
+                //  Slew CLOCKWISE
+                tl.LogMessage("SlewToAzimuth", "Slew CLOCKWISE");
+                IsSlewing = true;
+                double[] args = { Azimuth, Braking };
                 _arduino.Slew(Direction.CLOCKWISE);
-                while (Math.Abs(theta - Azimuth) > Braking)
-                //while (Math.Abs(_position - Azimuth) > Braking)
-                {
-                    utilities.WaitForMilliseconds(SleewingSleepTime);
-                    //_position = this.Azimuth;
-                    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
-                    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
-                }
-                _arduino.Stop();
+                slewThread.RunWorkerAsync(args);
+                //_arduino.Slew(Direction.CLOCKWISE);
+                //while (Math.Abs(theta - Azimuth) > Braking)
+                ////while (Math.Abs(_position - Azimuth) > Braking)
+                //{
+                //    utilities.WaitForMilliseconds(SleewingSleepTime);
+                //    //_position = this.Azimuth;
+                //    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                //    theta = 360 * this.Azimuth / encoder_resolution / dome_gear_ratio;
+                //}
+                //_arduino.Stop();
             }
             //else if (Math.Abs(theta - Azimuth) < Braking)
             else if (Math.Abs(_position - Azimuth) < Braking)
             {
 
             }
-            IsSlewing = false;
+            //IsSlewing = false;
         }
 
         public bool Slewing
@@ -708,27 +746,88 @@ namespace ASCOM.Arduino
 
         private void DomeTimer_Tick(object sender, EventArgs e)
         {
-            _position = _arduino.DomePosition;
-            Angle theta = _position * 360 / encoder_resolution / dome_gear_ratio;
-            if (Synced)
+            if (!IsSlewing)
             {
-                //  Check if the connected telescope has moved enough to need a new dome slew
-                if (Math.Abs(_telescope.Azimuth - theta) > Threshold)
-                //if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
+                _position = _arduino.DomePosition;
+                Angle theta = _position * 360 / encoder_resolution / dome_gear_ratio;
+                if (Synced)
                 {
-                    //  If yes check in which direction the dome has to turn and perform the slewing
-                    if (_telescope.Azimuth > theta)
-                    //if (_telescope.Azimuth > _position)
+                    //  Check if the connected telescope has moved enough to need a new dome slew
+                    if (Math.Abs(_telescope.Azimuth - theta) > Threshold)
+                    //if (Math.Abs(_telescope.Azimuth - _position) > Threshold)
                     {
-                        //SlewToAzimuth(_position + Threshold);
-                        SlewToAzimuth(_telescope.Azimuth + Threshold);// theta + Threshold);
-                    }
-                    else
-                    {
-                        SlewToAzimuth(_telescope.Azimuth - Threshold); //theta - Threshold);
-                        //SlewToAzimuth(_position - Threshold);
+                        //  If yes check in which direction the dome has to turn and perform the slewing
+                        if (_telescope.Azimuth > theta)
+                        //if (_telescope.Azimuth > _position)
+                        {
+                            //SlewToAzimuth(_position + Threshold);
+                            SlewToAzimuth(_telescope.Azimuth + Threshold);// theta + Threshold);
+                        }
+                        else
+                        {
+                            SlewToAzimuth(_telescope.Azimuth - Threshold); //theta - Threshold);
+                            //SlewToAzimuth(_position - Threshold);
+                        }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sleewing Thread body handler. This is the body thread that loops until the final position
+        /// is reached.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DoWorkEventArgs"/> instance containing the event data.</param>
+        private void slewThread_Body(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            double[] args = (double[])e.Argument;
+            //  Gets the argument in local variable
+            double azimuth = args[0];
+            double braking = args[1];
+            //  Slewing loop
+            double theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+            while (Math.Abs(theta - azimuth) > braking)
+            {
+                if (worker.CancellationPending == true)
+                {
+                    e.Cancel = true;
+                    break;
+                }
+                else
+                {
+                    utilities.WaitForMilliseconds(SleewingSleepTime);
+                    theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Slew Thread Completion event handler.
+        /// This handler verifies if the thread has been cancelled, if there is an error or it simply
+        /// properly close the thread.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RunWorkerCompletedEventArgs"/> instance containing the event data.</param>
+        private void slewThread_Completed(object sender, RunWorkerCompletedEventArgs e)
+        {
+            //  Check if the thread is cancelled
+            if (e.Cancelled == true)
+            {
+                tl.LogMessage("slewThread_Completed", "Slew Thread Cancelled");
+            }
+            //  Check if there is an error
+            else if (e.Error != null)
+            {
+                tl.LogMessage("slewThread_Completed", "Error");
+            }
+            //  If none of that stops the slewing and put set the slewing flag to false
+            else
+            {
+                IsSlewing = false;
+                _arduino.Stop();
+                tl.LogMessage("SlewToAzimuth", "Slew Completed");
             }
         }
 

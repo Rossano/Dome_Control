@@ -133,6 +133,20 @@ namespace Dome_Control.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap Circle_Green {
+            get {
+                object obj = ResourceManager.GetObject("Circle_Green", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap Circle_Red {
+            get {
+                object obj = ResourceManager.GetObject("Circle_Red", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap ConnectedImg {
             get {
                 object obj = ResourceManager.GetObject("ConnectedImg", resourceCulture);
@@ -338,6 +352,15 @@ namespace Dome_Control.Properties {
         internal static string RunTabDef {
             get {
                 return ResourceManager.GetString("RunTabDef", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slewing.
+        /// </summary>
+        internal static string SlewingLabel {
+            get {
+                return ResourceManager.GetString("SlewingLabel", resourceCulture);
             }
         }
         

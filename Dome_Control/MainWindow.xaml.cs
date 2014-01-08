@@ -103,11 +103,11 @@ namespace Dome_Control
                 //Image4.Source = new BitmapImage(new Uri(@"./images/RightArrow.png", UriKind.Relative));
                 //Image5.Source = new BitmapImage(new Uri(@"./images/Stop.png", UriKind.Relative));
                 //Image1.Source = LoadBitmapFromResource("Images/LeftArrow.png");
-                Uri uri = new Uri("pack://application:,,,/Images/LeftArrow.png");
-                Image1.Source = new BitmapImage(uri);
-                Image2.Source = new BitmapImage(new Uri("pack://application:,,,/Images/RightArrow.png"));
-                Image4.Source = Image1.Source;
-                Image5.Source = new BitmapImage(new Uri("pack://application:,,,,/Images/Stop.png"));
+                //Uri uri = new Uri("pack://application:,,,/Images/LeftArrow.png");
+                //Image1.Source = new BitmapImage(uri);
+                //Image2.Source = new BitmapImage(new Uri("pack://application:,,,/Images/RightArrow.png"));
+                //Image4.Source = Image1.Source;
+                //Image5.Source = new BitmapImage(new Uri("pack://application:,,,,/Images/Stop.png"));
             }
             catch { }
             _status = Status.NO_TURN;
@@ -176,7 +176,9 @@ namespace Dome_Control
                 ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
                 Connected_Label = Properties.Resources.StatusBar_Disconnected;
                 ConnectionStatusLabel.Content = Connected_Label;                
-                //ConnectioStatusLabel.Content = Disconnected_Label;                
+                //ConnectioStatusLabel.Content = Disconnected_Label;     
+                SlewingIndicatorLabel.Content = Properties.Resources.SlewingLabel;
+                SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Red.png", UriKind.Relative));
             }
             catch
             { }
@@ -227,6 +229,10 @@ namespace Dome_Control
                 //TelescopePos.Content = _dome._telescope.getAzimut();
                 TelescopePos.Content = _dome._telescope.Azimuth;
                 AngleDiff.Content = (360 * foo / _enc_resolution / _gear_ratio - _dome._telescope.Azimuth).ToString("F6");
+                if (_dome.Slewing)
+                {
+                    SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Green.png", UriKind.Relative));
+                }
             }
             //  Checks up the AVR connection and plot an error if it is found disconnected
             if(!_dome.Connected)
@@ -909,7 +915,8 @@ namespace Dome_Control
             {
                 if (_status == Status.TURN_LEFT || _status == Status.TURN_RIGHT)
                 {
-                    _dome.Stop();
+                    //_dome.Stop();
+                    _dome.AbortSlew();
                     _status = Status.NO_TURN;
                 }
             }
