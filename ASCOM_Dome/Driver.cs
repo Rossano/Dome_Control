@@ -197,10 +197,12 @@ namespace ASCOM.Arduino
             DomeTimer.IsEnabled = true;
             DomeTimer.Stop();
 
-            slewThread.WorkerReportsProgress = false;
+            slewThread.WorkerReportsProgress = true;
             slewThread.WorkerSupportsCancellation = true;
-            slewThread.DoWork+=new DoWorkEventHandler(slewThread_Body);
-            slewThread.RunWorkerCompleted+=new RunWorkerCompletedEventHandler(slewThread_Completed);
+            slewThread.DoWork += new DoWorkEventHandler(slewThread_Body);
+            slewThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(slewThread_Completed);
+            //slewThread.DoWork += slewThread_Body;
+            //slewThread.RunWorkerCompleted += slewThread_Completed;
             tl.LogMessage("Dome", "Completed initialisation");
         }
 
@@ -410,7 +412,12 @@ namespace ASCOM.Arduino
         {
             if (IsSlewing)
             {
-                _arduino.Stop();
+                Stop();
+                //_arduino.Stop();
+                if (slewThread.IsBusy)
+                {
+                    slewThread.CancelAsync();
+                }
                 IsSlewing = false;
             }
             // This is a mandatory parameter but we have no action to take in this simple driver
@@ -736,6 +743,9 @@ namespace ASCOM.Arduino
         public void UnsyncToAzimuth()
         {
             tl.LogMessage("UnsyncToAzimuth", "Stopping Synchroniziation to Azimouth");
+            //  Stop turning the Dome
+            Stop();
+            slewThread.CancelAsync();
             DomeTimer.Stop();
             Synced = false;
         }
@@ -787,7 +797,8 @@ namespace ASCOM.Arduino
             double azimuth = args[0];
             double braking = args[1];
             //  Slewing loop
-            double theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+            //double theta = 360 * _position / encoder_resolution / dome_gear_ratio;            
+            double theta = 360 * _arduino.DomePosition / encoder_resolution / dome_gear_ratio;
             while (Math.Abs(theta - azimuth) > braking)
             {
                 if (worker.CancellationPending == true)
@@ -797,8 +808,13 @@ namespace ASCOM.Arduino
                 }
                 else
                 {
+                    if (Math.Abs(theta - azimuth) < 10)
+                    {
+                        SleewingSleepTime = 10;
+                    }
                     utilities.WaitForMilliseconds(SleewingSleepTime);
-                    theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                    //theta = 360 * _position / encoder_resolution / dome_gear_ratio;
+                    theta = 360 * Azimuth / encoder_resolution / dome_gear_ratio;
                 }
             }
         }
@@ -826,9 +842,11 @@ namespace ASCOM.Arduino
             else
             {
                 IsSlewing = false;
-                _arduino.Stop();
+                //_arduino.Stop();
+                Stop();
                 tl.LogMessage("SlewToAzimuth", "Slew Completed");
             }
+            SleewingSleepTime = 100;
         }
 
         #endregion 

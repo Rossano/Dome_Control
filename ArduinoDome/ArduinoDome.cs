@@ -153,6 +153,11 @@ namespace Arduino.Dome
         /// The Arduino object
         /// </summary>
         public AVRDevice _avr;
+        /// <summary>
+        /// Semaphore to synchronze the access to the shared resource
+        /// Arduino
+        /// </summary>
+        private Semaphore AVRSemaphore;
 #if USE_SINGLE_QUEUE
         private Queue<string> avrResult;                //  FIFO storing the Strings received from AVR
 #endif        
@@ -240,6 +245,8 @@ namespace Arduino.Dome
 #if USE_SINGLE_QUEUE
             avrResult = new Queue<string>();
 #endif
+            //  Instantiate the semaphore
+            AVRSemaphore = new Semaphore(1, 0, "AVR Semaphore");
         }
 
         /// <summary>
@@ -291,7 +298,9 @@ namespace Arduino.Dome
 #if USE_SINGLE_QUEUE
             avrResult = new Queue<string>();
 #endif
-        }
+            //  Instantiate the semaphore
+            AVRSemaphore = new Semaphore(1, 1, "AVR Semaphore");
+       }
 
         #endregion
 
@@ -333,7 +342,8 @@ namespace Arduino.Dome
         /// <value>
         /// The dome angle position.
         /// </value>
-        public Angle DomePosition //{ get; set; }
+        public double DomePosition
+        //public Angle DomePosition //{ get; set; }
         {
             set
             {
@@ -411,7 +421,8 @@ namespace Arduino.Dome
                                     }
                                     i++;
                                 }
-                                return (Angle)Convert.ToDouble(lastPos);
+                                //return (Angle)Convert.ToDouble(lastPos);
+                                return Convert.ToDouble(lastPos);
                                 //return (Angle)Convert.ToDouble(tokens[1]);
                             }
                             catch (Exception)
@@ -436,7 +447,7 @@ namespace Arduino.Dome
                     {
                         //  Build up the Arduino command string for requesting the Dome position
                         string cmd = BuildArduinoCommand(DomeCommands.getPosition);
-                        string result;
+                        string result = "";
 #if USE_DOUBLE_QUEUE
                         MessageData _msg;
                         //  Check if the request is equal to the requestless Encoder Position information
@@ -482,12 +493,23 @@ namespace Arduino.Dome
                         }
 #elif USE_SINGLE_QUEUE                        
                         //  Send the request to the Arduino
-                        _avr.Send(cmd);                        
-                        //  Awaits the answer to the position request, if it is received 
-                        //  the RX data are consumed and property update, else an exception
-                        //  is returned
-                        Thread.Sleep(100);
-                        result = _avr.getCOMData();
+                        //_avr.Send(cmd);                        
+                        ////  Awaits the answer to the position request, if it is received 
+                        ////  the RX data are consumed and property update, else an exception
+                        ////  is returned
+                        //Thread.Sleep(100);
+                        //result = _avr.getCOMData();
+                        int count = 0;
+                        do
+                        {
+                            if (SendCommand(cmd))
+                            {
+                                result = avrResult.Dequeue();
+                                break;
+                            }
+                        }
+                        while (count++ < 10);
+                        if (count >= 10) throw new Exception("Error Reading Position from Arduino");
                         //  Split the RX data into their tokens to consume the information
                         char[] delim = { ' ', '=', '\r', '\n' };
                         string[] tokens = result.Split(delim, StringSplitOptions.RemoveEmptyEntries);
@@ -516,6 +538,8 @@ namespace Arduino.Dome
                             //    en.MoveNext();
                             //}
                             return (Angle)Convert.ToDouble(lastPos);
+                            //if (!lastPos.Equals("")) return Convert.ToDouble(lastPos);
+                            //else return;
                             //return (Angle)Convert.ToDouble(tokens[1]);
                         }
                         catch
@@ -580,13 +604,21 @@ namespace Arduino.Dome
                 }
 #elif USE_SINGLE_QUEUE
                 //  Send the request to the Arduino
-                _avr.Send(cmd);
-                //  Awaits the answer to the position request, if it is received 
-                //  the RX data are consumed and property update, else an exception
-                //  is returned
-                Thread.Sleep(100);
-                result = _avr.getCOMData();
-                return result;
+                //_avr.Send(cmd);
+                ////  Awaits the answer to the position request, if it is received 
+                ////  the RX data are consumed and property update, else an exception
+                ////  is returned
+                //Thread.Sleep(100);
+                //result = _avr.getCOMData();
+                for (int count = 0; count < 10; count++)
+                {
+                    if (SendCommand(cmd))
+                    {
+                        result = avrResult.Dequeue();
+                        return result;
+                    }
+                }
+                return "Error Reading Firmware Version";
 #endif
             }
         }
@@ -681,6 +713,8 @@ namespace Arduino.Dome
             //  Create the request string
 
             string request = _msg.msg + DomeCommands.Syntax.End;
+            //  Request semaphore to access the Arduino
+            AVRSemaphore.WaitOne();
             //  Send the request to the AVR instance
             _avr.Send(request);
             //
@@ -704,6 +738,8 @@ namespace Arduino.Dome
 #if USE_DOUBLE_BUFFER
                     receiveBuffer.Add(data);
 #endif
+                    //  Release teh semaphore for the AVR
+                    AVRSemaphore.Release();
                     return true;
                 }
                 else if (result.Contains("Error:"))
@@ -733,6 +769,8 @@ namespace Arduino.Dome
             }
             //  If counter is not expired send the command again
             while (count > 0);
+            //  Release the semaphore
+            AVRSemaphore.Release();
             //  Counter has expired, operation failed
             return false;
         }
@@ -746,6 +784,8 @@ namespace Arduino.Dome
         {
             //  Create the request string
             string request = cmd + DomeCommands.Syntax.End;
+            //  Request the semaphore to access the AVR
+            AVRSemaphore.WaitOne();
             //  Send the request to the AVR instance
             _avr.Send(request);
             //
@@ -764,6 +804,8 @@ namespace Arduino.Dome
 #if USE_SINGLE_QUEUE
                     avrResult.Enqueue(result);
 #endif
+                    //  Release the semaphore
+                    AVRSemaphore.Release();
                     return true;
                 }
                 else if (result.Contains("Error:"))
@@ -777,6 +819,7 @@ namespace Arduino.Dome
                     _avr.Send("\r\n");
                     Thread.Sleep(100);
                     _avr.getCOMData();
+                    //  _avr.Send(cmd);
                 }
                 else
                 {
@@ -784,12 +827,16 @@ namespace Arduino.Dome
 #if USE_SINGLE_QUEUE
                     avrResult.Enqueue(result);
 #endif
+                    //  Release the semaphore
+                    AVRSemaphore.Release();
                     return true;
                 }
 
             }
             //  If counter is not expired send the command again
             while (count > 0);
+            //  Release the semaphore
+            AVRSemaphore.Release();
             //  Counter has expired, operation failed
             return false;
         }
@@ -922,7 +969,7 @@ namespace Arduino.Dome
 #endif
 #if USE_SINGLE_QUEUE
                     if (SendCommand(cmd) == true) result = avrResult.Dequeue();
-                    else throw new Exception(avrResult.Dequeue());
+                    else throw new Exception(avrResult.Dequeue());                    
                     return result;
 #endif
             }
@@ -965,10 +1012,14 @@ namespace Arduino.Dome
                     return result;
                 }
 #elif USE_SINGLE_QUEUE
+                //  Request the semaphore to access the AVR
+                AVRSemaphore.WaitOne();
                 _avr.Send(cmd);
                 Thread.Sleep(500);
                 //  Reads back the answer from the AVR and check if it is consistent
                 string res = _avr.getCOMData();
+                //  Release the semaphore
+                AVRSemaphore.Release();
                 //  If it contains "OK" returns the string from AVR
                 //  Else throw an exception
                 if (res.Contains(DomeCommands.getInfo + " OK")) return res;
@@ -991,11 +1042,13 @@ namespace Arduino.Dome
         /// <returns>True if ACK is received, false if not</returns>
         public bool GetAck()
         {
-            try
+            for (int i = 0; i < 10; i++)
             {
-                //  Prepare the AVR Firmware command to request the ACK
-                string cmd = BuildArduinoCommand(DomeCommands.getAck);
-                string result;
+                try
+                {
+                    //  Prepare the AVR Firmware command to request the ACK
+                    string cmd = BuildArduinoCommand(DomeCommands.getAck);
+                    string result;
 #if USE_DOUBLE_QUEUE
                 MessageData _msg;
                 if(reqCounter++ == EncoderDummyRequest)
@@ -1017,25 +1070,32 @@ namespace Arduino.Dome
                     else return false;
                 }
 #elif USE_SINGLE_QUEUE
-                _avr.Send(cmd);
-                Thread.Sleep(500);
-                //  Reads back the answer from the AVR and check if it is consistent
-                string res = _avr.getCOMData();
-                //  If it contains "OK" returns the string from AVR
-                //  Else throw an exception
-                if (res.Contains(DomeCommands.getAck + " OK")) return true;
-                else
-                {
-                    throw new TimeoutException("Timeout getting FW Version");
-                }
+                    //  Request the semaphore to access the AVR
+                    AVRSemaphore.WaitOne();
+                    //  Send the command to the AVR
+                    _avr.Send(cmd);
+                    Thread.Sleep(500);
+                    //  Reads back the answer from the AVR and check if it is consistent
+                    string res = _avr.getCOMData();
+                    //  Release the semaphore
+                    AVRSemaphore.Release();
+                    //  If it contains "OK" returns the string from AVR
+                    //  Else throw an exception
+                    if (res.Contains(DomeCommands.getAck + " OK")) return true;
+                    else
+                    {
+                        //throw new TimeoutException("Timeout getting FW Version");
+                    }
 #endif
-                                
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                    //return false;
+                }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-                //return false;
-            }            
+            throw new TimeoutException("Timeout getting FW Version");
         }
 
         public bool Slew(Direction dir)

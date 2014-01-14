@@ -714,7 +714,8 @@ namespace Dome_Control
 
             //  Defines the external executable name and process mode
             avrdude.WindowStyle = ProcessWindowStyle.Hidden;
-            avrdude.FileName = "avrdude.exe";
+            //System.Windows.MessageBox.Show(System.Environment.CurrentDirectory, "info");
+            avrdude.FileName = "./avrdude.exe";
             //  Defines the arguments
             avrdude.Arguments = string.Format("-c {0} -p m32u4 -P {1} -U lfuse:r:0xfc:m -U hfuse:r:0xd0:m -U efuse:r:0xf3:m", BootLoader_Protocol, AVRBootLoader_COM);
             //  Launch the executable and wait until has not ended
@@ -913,7 +914,7 @@ namespace Dome_Control
         {
             try
             {
-                if (_status == Status.TURN_LEFT || _status == Status.TURN_RIGHT)
+                //if (_status == Status.TURN_LEFT || _status == Status.TURN_RIGHT)
                 {
                     //_dome.Stop();
                     _dome.AbortSlew();

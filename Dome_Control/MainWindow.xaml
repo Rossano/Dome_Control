@@ -98,7 +98,7 @@
                             <Label Name="AngleDiffLabel" Width="100" />
                             <Label Name="AngleDiff" Width="100" />
                         </StackPanel>
-                        <CheckBox Name="SyncCheckBox" Margin="10" Content="" IsChecked="False" Checked="SyncCheckBox_Checked"/>
+                        <CheckBox Name="SyncCheckBox" Margin="10" Content="" IsChecked="False" Click="SyncCheckBox_Checked" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Orientation="Vertical">                             
