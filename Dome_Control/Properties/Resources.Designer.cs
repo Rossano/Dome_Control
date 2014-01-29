@@ -339,6 +339,13 @@ namespace Dome_Control.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap parking {
+            get {
+                object obj = ResourceManager.GetObject("parking", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap rightarrow {
             get {
                 object obj = ResourceManager.GetObject("rightarrow", resourceCulture);

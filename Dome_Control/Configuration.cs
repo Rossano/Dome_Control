@@ -354,7 +354,8 @@ namespace Dome_Control
                 while (nodes.MoveNext())
                 {
                     res = nodes.Current.Value;
-                    _enc_resolution = (uint)nodes.Current.ValueAsInt;
+//                    _enc_resolution = (uint)nodes.Current.ValueAsInt;
+                    EncoderRes.Value = (uint)nodes.Current.ValueAsInt;
                 }
                 //
                 //  Get Encoder Gear Ratio
@@ -368,7 +369,8 @@ namespace Dome_Control
                 while (nodes.MoveNext())
                 {
                     res = nodes.Current.Value;
-                    _gear_ratio = nodes.Current.ValueAsDouble;
+//                    _gear_ratio = nodes.Current.ValueAsDouble;
+                    GearRatio.Value = nodes.Current.ValueAsDouble;
                 }
                 //----------------------------------------------------------------------
                 //
@@ -387,7 +389,8 @@ namespace Dome_Control
                 while (nodes.MoveNext())
                 {
                     res = nodes.Current.Value;
-                    _motor_accel_time = (uint)nodes.Current.ValueAsInt;
+//                    _motor_accel_time = (uint)nodes.Current.ValueAsInt;
+                    MotorAccelleration.Value = (uint)nodes.Current.ValueAsInt;
                 }
                 //
                 //  Get Dome angular Speed
@@ -401,7 +404,22 @@ namespace Dome_Control
                 while (nodes.MoveNext())
                 {
                     res = nodes.Current.Value;
-                    _motor_rpm = (uint)nodes.Current.ValueAsInt;
+//                    _motor_rpm = (uint)nodes.Current.ValueAsInt;
+                    MotorSpeed.Value = (uint)nodes.Current.ValueAsInt;
+                }
+                //
+                //  Get Dome Threshold value
+                //
+                node = nav.Select("config/Dome/Threshold");
+                //  needs that to access the xml sub-tree
+                node.MoveNext();
+                target = node.Current;
+                nodes = target.SelectDescendants(XPathNodeType.Text, false);
+                //  Iterates all the sub-tree to get the last node
+                while (nodes.MoveNext())
+                {
+                    res = nodes.Current.Value;
+//                    _threshold = (double)nodes.Current.ValueAsDouble;
                 }
             }
             catch (Exception ex)

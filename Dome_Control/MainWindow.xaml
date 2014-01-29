@@ -1,11 +1,12 @@
 ﻿<Window x:Class="Dome_Control.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ProjectProperties="clr-namespace:Dome_Control.Properties"
-        
+        xmlns:ProjectProperties="clr-namespace:Dome_Control.Properties"        
         Title="MainWindow" Height="350" Width="450" MinHeight="540" MinWidth="500" SizeChanged="Window_SizeChanged"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"             
+        xmlns:dg="http://schemas.microsoft.com/wpf/2008/toolkit"
+        xmlns:wpfx="clr-namespace:Xceed.Wpf.Toolkit;assembly=WPFToolkit.Extended"   
         SizeToContent="WidthAndHeight" Loaded="Window_Loaded" >
     <!-- Command Binding Definition for Custom commands -->
     <Window.CommandBindings>
@@ -68,6 +69,10 @@
             </MenuItem>
             <!-- Options Menu -->
             <MenuItem Header="Item 2" Name="MenuItemOptionsName" x:Uid="MenuItemOptionsName">
+                <StackPanel>
+                    <MenuItem Name="DebugMode" x:Uid="DebugMode" Click="DebugMode_Click"/>
+                    <CheckBox IsChecked="{Binding Path=_arduinoDebugMode}" Name="DebugMode_MenuItem_CB" />
+                </StackPanel>
                 <!--<MenuItem Header="Item 2.1" Name="COM_Options" x:Uid="COM_Options" Click="COM_Option_Executed"/>-->
                 <!--Command="COM_Options" />-->
                 <!--<MenuItem Header="Item 2.2" Name="GraphOptions" x:Uid="GraphOptions" Click="GraphOptions_Click"/>
@@ -132,9 +137,15 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
-                        <Button Name="StopButton" Margin="3" Height="60" Width="70" Click="StopButton_Click">
-                            <Image Height="50" Width="70" Name="Image5" Source="Images/Stop.png"/>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Name="StopButton" Margin="3" Height="60" Width="70" Click="StopButton_Click">
+                                <Image Height="50" Width="70" Name="Image5" Source="Images/Stop.png"/>
+                            </Button>
+                            <Button Name="ParkButton" Margin="3" Height="60" Width="70" Click="ParkButton_Click">
+                                <Image Height="50" Width="70" Name="Image6"  Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/ARA2.ico" />
+                            </Button>
+                        </StackPanel>
+                            
                         <Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
                                                 MaxWidth="150" MinWidth="70"  Content="ASCOM"/>
                         <StackPanel Orientation="Horizontal" Margin="5">
@@ -145,55 +156,104 @@
                 </StackPanel>
             </TabItem>
             <TabItem Name="ControlTab" >
-                <GroupBox Name="Connection_Box" MinWidth="430" MinHeight="450">
-                    <StackPanel Margin="5" Orientation="Vertical" Height="Auto" >
-                        <StackPanel Margin="5" Orientation="Horizontal" Height="Auto">
-                            <Label Margin="5" Name="COMPort_Label">COM Port</Label>
-                            <ComboBox Name="AVRCOMListBox" MinWidth="70" Margin="5" SelectionChanged="AVRCOMListBox_SelectionChanged" />
-                            <Label Margin="5">Baudrate</Label>
-                            <ComboBox Margin="5" Name="AVRBaudrateListBox" MinWidth="65" 
-                                                          SelectionChanged="AVRBaudrateListBox_SelectionChanged" SelectedIndex="0">
-                                <ComboBoxItem>9600</ComboBoxItem>
-                                <ComboBoxItem>19200</ComboBoxItem>
-                                <ComboBoxItem>38400</ComboBoxItem>
-                                <ComboBoxItem>56600</ComboBoxItem>
-                                <ComboBoxItem>115200</ComboBoxItem>
-                            </ComboBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <GroupBox Name="DomeCfgBox" MinWidth="230" MinHeight="150">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="MotorSpeedLabel" x:Uid="MotorSpeedLabel" Content="Motor Speed" />                                    
+                                    <wpfx:DecimalUpDown Name="MotorSpeed" Value="1400" Height="30" FormatString="N" />
+                                    <Label>rpm</Label>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="MotorAccellLabel" x:Uid="MotorAcellLabel" Content="Motor Accelleration Time" />
+                                    <wpfx:DecimalUpDown Name="MotorAccelleration" Value="5" Height="30" FormatString="N"/>
+                                    <Label>sec</Label>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="GearRatioLabel" x:Uid="GearRatioLabel" Content="Gear Ratio" />
+                                    <wpfx:DoubleUpDown Name="GearRatio" FormatString="F" Value="80.0"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="ThresholdLabel" x:Uid="ThresholdLabel" Content="Threshold" />
+                                    <wpfx:DoubleUpDown Name="Threshold" FormatString="F" Value="5.0" />
+                                </StackPanel>
+                            </StackPanel>                            
+                        </GroupBox>
+                        <GroupBox Name="EncoderCfgBox" Header="Encoder" MinHeight="100" MinWidth="230">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="ResolutionLabel" x:Uid="ResolutionLabel" Content="Resolution" />
+                                    <wpfx:DecimalUpDown Name="EncoderRes" FormatString="N" Value="100" />
+                                    <Label Name="StepsLabel" Content="steps" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="OffsetLabel" x:Uid="OffsetLabel" Content="Offset" />
+                                    <wpfx:DoubleUpDown Name="Offset" FormatString="F" Value="0.0" />
+                                    <Label>°</Label>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Name="EncoderDebuglabel" x:Uid="EncoderDebugLabel" Content="Encoder Debug" />
+                            <CheckBox IsChecked="False"  Click="DebugMode_Click" />
                         </StackPanel>
-                        <StackPanel Margin="10" Orientation="Horizontal">
-                            <GroupBox Header="Parity" Margin="5" Width="100">
-                                <StackPanel Orientation="Vertical">
-                                    <RadioButton Name="AVRParity_None" IsChecked="True" Click="AVRParity_None_Click">None</RadioButton>
-                                    <RadioButton Name="AVRParity_Even" Click="AVRParity_Even_Click">Even</RadioButton>
-                                    <RadioButton Name="AVRParity_Odd" Click="AVRParity_Odd_Click">Odd</RadioButton>
-                                    <RadioButton Name="AVRParity_Mark" Click="AVRParity_Mark_Click">Mark</RadioButton>
-                                    <RadioButton Name="AVRParity_Space" Click="AVRParity_Space_Click">Space</RadioButton>
-                                </StackPanel>
-                            </GroupBox>
-                            <GroupBox Header="StopBits" Margin="5" Width="100">
-                                <StackPanel Orientation="Vertical">
-                                    <RadioButton Name="AVRStopbitNone" Click="AVRStopbitNone_Click">None</RadioButton>
-                                    <RadioButton Name="AVRStopbit1" IsChecked="True" Click="AVRStopbit1_Click">1</RadioButton>
-                                    <RadioButton Name="AVRStopbit15" Click="AVRStopbit15_Click">1.5</RadioButton>
-                                    <RadioButton Name="AVRStopbit2" Click="AVRStopbit2_Click">2</RadioButton>
-                                </StackPanel>
-                            </GroupBox>
-                            <GroupBox Header="Handshake" Margin="5" Width="110">
-                                <StackPanel Orientation="Vertical">
-                                    <RadioButton Name="AVRHandshake_None" IsChecked="True" Click="AVRHandshake_None_Click">None</RadioButton>
-                                    <RadioButton Name="AVRHandshake_RTS" Click="AVRHandshake_RTS_Click">RTS</RadioButton>
-                                    <RadioButton Name="AVRHandshake_RTSX" Click="AVRHandshake_RTSX_Click">RTS XOn/XOff</RadioButton>
-                                    <RadioButton Name="AVRHandshake_XonXoff" Click="AVRHandshake_XonXoff_Click">XOn / XOff</RadioButton>
-                                </StackPanel>
-                            </GroupBox>
-                        </StackPanel>
-                        <!--<Button Margin="10" Name="AVRConnectButton" Click="AVRConnectButton_Click" MinHeight="25"
-                                                MaxWidth="150" MinWidth="70" />-->
-                        <Image Name="TestImage" Margin="130,30,72,72" Stretch="Uniform"  Source="{Binding Path=StatusBar_Image}" DataContext="{Binding}" />
-                        <!--<Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
-                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>-->
                     </StackPanel>
-                </GroupBox>
+                    <GroupBox Name="Connection_Box" MinWidth="230" MinHeight="450" Grid.Column="1">
+                        <StackPanel Margin="5" Orientation="Vertical" Height="Auto" >
+                            <StackPanel Margin="5" Orientation="Horizontal" Height="Auto">
+                                <Label Margin="5" Name="COMPort_Label">COM Port</Label>
+                                <ComboBox Name="AVRCOMListBox" MinWidth="70" Margin="5" SelectionChanged="AVRCOMListBox_SelectionChanged" />
+                                <Label Margin="5">Baudrate</Label>
+                                <ComboBox Margin="5" Name="AVRBaudrateListBox" MinWidth="65" 
+                                                          SelectionChanged="AVRBaudrateListBox_SelectionChanged" SelectedIndex="0">
+                                    <ComboBoxItem>9600</ComboBoxItem>
+                                    <ComboBoxItem>19200</ComboBoxItem>
+                                    <ComboBoxItem>38400</ComboBoxItem>
+                                    <ComboBoxItem>56600</ComboBoxItem>
+                                    <ComboBoxItem>115200</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="10" Orientation="Horizontal">
+                                <GroupBox Header="Parity" Margin="5" Width="100">
+                                    <StackPanel Orientation="Vertical">
+                                        <RadioButton Name="AVRParity_None" IsChecked="True" Click="AVRParity_None_Click">None</RadioButton>
+                                        <RadioButton Name="AVRParity_Even" Click="AVRParity_Even_Click">Even</RadioButton>
+                                        <RadioButton Name="AVRParity_Odd" Click="AVRParity_Odd_Click">Odd</RadioButton>
+                                        <RadioButton Name="AVRParity_Mark" Click="AVRParity_Mark_Click">Mark</RadioButton>
+                                        <RadioButton Name="AVRParity_Space" Click="AVRParity_Space_Click">Space</RadioButton>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Header="StopBits" Margin="5" Width="100">
+                                    <StackPanel Orientation="Vertical">
+                                        <RadioButton Name="AVRStopbitNone" Click="AVRStopbitNone_Click">None</RadioButton>
+                                        <RadioButton Name="AVRStopbit1" IsChecked="True" Click="AVRStopbit1_Click">1</RadioButton>
+                                        <RadioButton Name="AVRStopbit15" Click="AVRStopbit15_Click">1.5</RadioButton>
+                                        <RadioButton Name="AVRStopbit2" Click="AVRStopbit2_Click">2</RadioButton>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Header="Handshake" Margin="5" Width="110">
+                                    <StackPanel Orientation="Vertical">
+                                        <RadioButton Name="AVRHandshake_None" IsChecked="True" Click="AVRHandshake_None_Click">None</RadioButton>
+                                        <RadioButton Name="AVRHandshake_RTS" Click="AVRHandshake_RTS_Click">RTS</RadioButton>
+                                        <RadioButton Name="AVRHandshake_RTSX" Click="AVRHandshake_RTSX_Click">RTS XOn/XOff</RadioButton>
+                                        <RadioButton Name="AVRHandshake_XonXoff" Click="AVRHandshake_XonXoff_Click">XOn / XOff</RadioButton>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>                            
+                            <!--<Button Margin="10" Name="AVRConnectButton" Click="AVRConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70" />-->
+                            <!--<Image Name="TestImage" Margin="130,30,72,72" Stretch="Uniform"  Source="{Binding Path=StatusBar_Image}" DataContext="{Binding}" />-->
+                            <!--<Button Margin="10" Name="ASCOMConnectButton" Click="ASCOMConnectButton_Click" MinHeight="25"
+                                                MaxWidth="150" MinWidth="70"  Content="ASCOM"/>-->
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+                
             </TabItem>
             <!--<TabItem Name="TunTab" Grid.Row="1" MinHeight="450"> 
                 <StackPanel Orientation="Horizontal">

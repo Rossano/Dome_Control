@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
   <AVR>
-    <COM>COM19</COM>
-    <Baudrate>9600</Baudrate>
+    <COM>COM18</COM>
+    <Baudrate>57600</Baudrate>
     <Databits>8</Databits>
     <Stopbits>One</Stopbits>
     <Parity>None</Parity>
@@ -15,11 +15,12 @@
   <Dome>
     <accel_time>5</accel_time>
     <angular_speed_rpm>1400</angular_speed_rpm>
+    <Threshold>5.0</Threshold>
   </Dome>
   <Encoder>
     <type>incremental</type>
     <resolution>100</resolution>
-    <gear_ratio>1920</gear_ratio>
-    <LastPosition>148603</LastPosition>
+    <gear_ratio>80</gear_ratio>
+    <LastPosition>6064</LastPosition>
   </Encoder>
 </config>

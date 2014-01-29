@@ -46,12 +46,14 @@ namespace Dome_Control
         private bool isArduinoBootloader;
         private string AVRBootLoader_COM;
         private bool isAuto = false;
+        private bool _arduinoDebugMode;
         private uint TelescopeCheckInterval_s = 1;
         private int SleewingSleepTime = 100;
-        private uint _motor_accel_time = 5;
-        private uint _motor_rpm = 1400;
-        private uint _enc_resolution;
-        private double _gear_ratio;
+        //private uint _motor_accel_time = 5;
+        //private uint _motor_rpm = 1400;
+        //private uint _enc_resolution;
+        //private double _gear_ratio = 80;
+        //private double _threshold;
         private const uint ReadingSample = 5;
         private string[] HelpPaths;
         private const string DefaultChm = "Dome_Control_Help_en-US.chm";
@@ -94,22 +96,7 @@ namespace Dome_Control
 
         public MainWindow()
         {
-            InitializeComponent();
-            try
-            {
-                //Image1.Source = new BitmapImage(new Uri(@"././images/LeftArrow.png", UriKind.Relative));
-                //Image2.Source = new BitmapImage(new Uri(@"././images/RightArrow.png", UriKind.Relative));
-                //Image3.Source = new BitmapImage(new Uri(@"images/LeftArrow.png", UriKind.Relative));
-                //Image4.Source = new BitmapImage(new Uri(@"./images/RightArrow.png", UriKind.Relative));
-                //Image5.Source = new BitmapImage(new Uri(@"./images/Stop.png", UriKind.Relative));
-                //Image1.Source = LoadBitmapFromResource("Images/LeftArrow.png");
-                //Uri uri = new Uri("pack://application:,,,/Images/LeftArrow.png");
-                //Image1.Source = new BitmapImage(uri);
-                //Image2.Source = new BitmapImage(new Uri("pack://application:,,,/Images/RightArrow.png"));
-                //Image4.Source = Image1.Source;
-                //Image5.Source = new BitmapImage(new Uri("pack://application:,,,,/Images/Stop.png"));
-            }
-            catch { }
+            InitializeComponent();            
             _status = Status.NO_TURN;
             try
             {
@@ -178,7 +165,7 @@ namespace Dome_Control
                 ConnectionStatusLabel.Content = Connected_Label;                
                 //ConnectioStatusLabel.Content = Disconnected_Label;     
                 SlewingIndicatorLabel.Content = Properties.Resources.SlewingLabel;
-                SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Red.png", UriKind.Relative));
+                SlewingLight.Source = new BitmapImage(new Uri(@"images/Circle_Red.png", UriKind.Relative));
             }
             catch
             { }
@@ -216,7 +203,7 @@ namespace Dome_Control
             {
                 foo = _dome.Azimuth;
                 pos = Convert.ToInt64(foo);
-                DomePosition.Content = (360 * foo / _enc_resolution / _gear_ratio).ToString("F6");
+                DomePosition.Content = (360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value).ToString("F6");
                 writeLastDomePosition(pos);
             }
             catch (Exception ex)
@@ -228,7 +215,7 @@ namespace Dome_Control
             {
                 //TelescopePos.Content = _dome._telescope.getAzimut();
                 TelescopePos.Content = _dome._telescope.Azimuth;
-                AngleDiff.Content = (360 * foo / _enc_resolution / _gear_ratio - _dome._telescope.Azimuth).ToString("F6");
+                AngleDiff.Content = (360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value - _dome._telescope.Azimuth).ToString("F6");
                 if (_dome.Slewing)
                 {
                     SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Green.png", UriKind.Relative));
@@ -582,7 +569,7 @@ namespace Dome_Control
         /// <param name="ex">The ex.</param>
         private void ErrDlg(string str, Exception ex)
         {
-            System.Windows.MessageBox.Show(str + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            System.Windows.MessageBox.Show(DateTime.Now.ToString() + str + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -607,10 +594,11 @@ namespace Dome_Control
                     {
                         _dome = new Dome();
                     }
-                    _dome.motor_accelleration_time = _motor_accel_time;
-                    _dome.dome_gear_ratio = _gear_ratio;
-                    _dome.dome_angular_speed = 2 * Math.PI * _motor_rpm / _gear_ratio / 60;
-                    _dome.encoder_resolution = _enc_resolution;
+                    _dome.motor_accelleration_time = (uint)MotorSpeed.Value;
+                    _dome.dome_gear_ratio = (double)GearRatio.Value;
+                    _dome.dome_angular_speed = 2 * Math.PI * (int)MotorSpeed.Value / (double)GearRatio.Value / 60;
+                    _dome.encoder_resolution = (uint)EncoderRes.Value;
+                    _dome.Threshold = (uint)Threshold.Value;
                     _dome.configureFirmware();
                     //
                     //  Gets connection information to the Arduino and the telescope
@@ -937,6 +925,24 @@ namespace Dome_Control
             //_dome.Synced = (bool)SyncCheckBox.IsChecked;
             if ((bool)SyncCheckBox.IsChecked) _dome.SyncToAzimuth(_dome._telescope.Azimuth);
             else _dome.UnsyncToAzimuth();
+        }
+
+        private void ParkButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!this._dome.Slewing)
+            {
+                this._dome.SlewToAzimuth(0.0);
+                this._dome.UnsyncToAzimuth();
+            }
+            else
+            {
+                Debug.Write("Park command refused since Dome is slewing");
+            }
+        }
+
+        private void DebugMode_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

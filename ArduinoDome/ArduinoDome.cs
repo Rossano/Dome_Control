@@ -29,7 +29,7 @@ namespace Arduino.Dome
     {
         ANTICLOCWISE,                                   //  Turning Dome anticlockwise
         CLOCKWISE                                       //  Turning Dome clockwise
-    }
+    } ;
 
     /// <summary>
     /// Peltier Objcet
@@ -58,7 +58,7 @@ namespace Arduino.Dome
         /// Variable to indicate the capability of the dri er to use encoder
         /// home signal
         /// </summary>
-        const bool use_Encoder_Home = false;
+        const bool use_Encoder_Home = false;        
         /// <summary>
         /// The encoder dummy request to identify a message of new dome position
         /// </summary>
@@ -392,7 +392,7 @@ namespace Arduino.Dome
                     //  a position update
                     foreach (string s in foo)
                     {
-                        if (s.Contains("Position"))
+                        if (s.Contains("Position") && s != null)
                         {
                             //  If found split the received string into its tokens and covert it
                             //  into a double to update the property                            
@@ -429,13 +429,13 @@ namespace Arduino.Dome
                             {
                                 //  In case of error restore old position and throw an exception
                                 //                                return oldPos;
-                                throw new Exception("Error reading dome position");
+                                throw new Exception("Error reading dome position, received: " + s);
                             }
                             finally
                             {
                                 avrResult.Clear();
                             }
-                        }                        
+                        }
                     }
 #endif
                     //
@@ -544,7 +544,7 @@ namespace Arduino.Dome
                         }
                         catch
                         {
-                            throw new Exception("Error reading Dome position");
+                            throw new Exception("Error reading Dome position, received: " + result);
 //                            return oldPos;
                         }                        
 #endif
@@ -622,6 +622,11 @@ namespace Arduino.Dome
 #endif
             }
         }
+
+        /// <summary>
+        /// Gets or sets the dome slewing direction.
+        /// </summary>        
+       public Direction SlewDirection { get; set; }
 
         #endregion
 
@@ -1104,9 +1109,17 @@ namespace Arduino.Dome
             {
                 string cmd;
                 //  First check in which direction to turn and build the Arduino FW command
-                if(dir==Direction.CLOCKWISE) cmd=BuildArduinoCommand(DomeCommands.TurnClockwise);
-                else cmd=BuildArduinoCommand(DomeCommands.TurnAnticlockwise);
-                string result;                                
+                if (dir == Direction.CLOCKWISE)
+                {
+                    cmd = BuildArduinoCommand(DomeCommands.TurnClockwise);
+                    SlewDirection = Direction.CLOCKWISE;
+                }
+                else
+                {
+                    cmd = BuildArduinoCommand(DomeCommands.TurnAnticlockwise);
+                    SlewDirection = Direction.ANTICLOCWISE;
+                }
+                string result;
 #if USE_DOUBLE_QUEUE
                 //  Create the request ID, avoiding that it is the requestless Position gotten from encoder
                 MessageData _msg;
@@ -1146,10 +1159,18 @@ namespace Arduino.Dome
                     return false;
                 }
 #elif USE_SINGLE_QUEUE
-                return SendCommand(cmd);
+                if (SendCommand(cmd))
+                {
+                    avrResult.Dequeue();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
 #endif
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
