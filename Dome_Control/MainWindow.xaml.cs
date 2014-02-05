@@ -57,6 +57,7 @@ namespace Dome_Control
         private const uint ReadingSample = 5;
         private string[] HelpPaths;
         private const string DefaultChm = "Dome_Control_Help_en-US.chm";
+        private double _HOME { get; set; }
         private string chmFullFileName;
         private DispatcherTimer mainTimer = new DispatcherTimer();
         private DebugWindow debugWnd = null;
@@ -96,7 +97,10 @@ namespace Dome_Control
 
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            //  Setting default Dome HOME position
+            _HOME = 0.0;
+            //  Setting default slewing state
             _status = Status.NO_TURN;
             try
             {
@@ -161,10 +165,13 @@ namespace Dome_Control
             try
             {
                 ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
-                Connected_Label = Properties.Resources.StatusBar_Disconnected;
+                ConnectionImage.MinHeight = 15;
+//                Connected_Label = Properties.Resources.StatusBar_Disconnected;
+                Connected_Label = Dome_Control.Resources.Strings.StatusBar_Disconnected;
                 ConnectionStatusLabel.Content = Connected_Label;                
                 //ConnectioStatusLabel.Content = Disconnected_Label;     
-                SlewingIndicatorLabel.Content = Properties.Resources.SlewingLabel;
+//                SlewingIndicatorLabel.Content = Properties.Resources.SlewingLabel;
+                SlewingIndicatorLabel.Content = Dome_Control.Resources.Strings.SlewingLabel;
                 SlewingLight.Source = new BitmapImage(new Uri(@"images/Circle_Red.png", UriKind.Relative));
             }
             catch
@@ -214,11 +221,15 @@ namespace Dome_Control
             if(_dome._telescope.Connected)
             {
                 //TelescopePos.Content = _dome._telescope.getAzimut();
-                TelescopePos.Content = _dome._telescope.Azimuth;
+                TelescopePos.Content = _dome._telescope.Azimuth.ToString("F6");
                 AngleDiff.Content = (360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value - _dome._telescope.Azimuth).ToString("F6");
                 if (_dome.Slewing)
                 {
                     SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Green.png", UriKind.Relative));
+                }
+                else
+                {
+                    SlewingLight.Source = new BitmapImage(new Uri(@"Images/Circle_Red.png", UriKind.Relative));
                 }
             }
             //  Checks up the AVR connection and plot an error if it is found disconnected
@@ -584,7 +595,7 @@ namespace Dome_Control
                 //
                 //  Check if Dome is already connected
                 //
-                if (ASCOMConnectButton.Content.Equals(Properties.Resources.Button_Connect))
+                if (ASCOMConnectButton.Content.Equals(Dome_Control.Resources.Strings.Button_Connect)) //Properties.Resources.Button_Connect))
                 {
                     //  Connect the AVR
                     //
@@ -627,7 +638,7 @@ namespace Dome_Control
                     {
                         ver += tokens[i + j] + " ";
                     }
-                    //  Show the AVR Firmware version into a message box
+                    //  Show the AVR Firmware0 version into a message box
                     System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     //
                     //  Display the Control Tab into the GUI
@@ -642,9 +653,11 @@ namespace Dome_Control
                     //  Change the StatusBar Icon
                     ConnectionImage.Source = new BitmapImage(new Uri(@"./images/ConnectedImg.png", UriKind.Relative));
                     //  Change the StatusBar labels
-                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
+//                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Connected;
+                    ConnectionStatusLabel.Content = Dome_Control.Resources.Strings.StatusBar_Connected;
                     StatusBar_Version.Content = "FW Ver. : " + tokens[i + 1] + " " + tokens[i + 2];
-                    ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+//                    ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+                    ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Disconnect;
                 }
                 else
                 {
@@ -659,9 +672,11 @@ namespace Dome_Control
                     //  Change the StatusBar Icon
                     ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
                     //  Change the StatusBar labels
-                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
+//                    ConnectionStatusLabel.Content = Properties.Resources.StatusBar_Disconnected;
+                    ConnectionStatusLabel.Content = Dome_Control.Resources.Strings.StatusBar_Disconnected;
                     StatusBar_Version.Content = "FW Ver. : ";
-                    ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+//                    ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+                    ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Connect;
                     //
                     //  If it is AVR Bootloader help to get into the AVR user code via avrdude
                     //
@@ -674,7 +689,8 @@ namespace Dome_Control
 
                 //_telescope = new ASCOM_Telescope();
                 //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
-                ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+//                ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
+                ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Disconnect;
             }
             catch (Exception ex)
             {
@@ -718,7 +734,8 @@ namespace Dome_Control
             {
                 //  In case of error report it to the user
                // throw new Exception("AVRDUDE fails, impossible to connect to AVR");
-                ErrDlg(Properties.Resources.Error_AVRDUDE,ex);
+//                ErrDlg(Properties.Resources.Error_AVRDUDE,ex);
+                ErrDlg(Dome_Control.Resources.Strings.Error_AVRDUDE, ex);
             }
         }
 
@@ -931,8 +948,8 @@ namespace Dome_Control
         {
             if (!this._dome.Slewing)
             {
-                this._dome.SlewToAzimuth(0.0);
                 this._dome.UnsyncToAzimuth();
+                this._dome.SlewToAzimuth(_HOME);                
             }
             else
             {

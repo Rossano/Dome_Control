@@ -415,10 +415,12 @@ namespace ASCOM.Arduino
             {
                 Stop();
                 //_arduino.Stop();
-                if (slewThread.IsBusy)
+                if (slewThread.IsBusy && slewThread.WorkerSupportsCancellation)
                 {
                     slewThread.CancelAsync();
                 }
+                //  Apparently it needs to be done twice the command to have effect
+                Stop();
                 IsSlewing = false;
             }
             // This is a mandatory parameter but we have no action to take in this simple driver

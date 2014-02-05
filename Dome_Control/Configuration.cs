@@ -688,44 +688,64 @@ namespace Dome_Control
             {
                 //
                 //  Menu Definitions
-                //           
-                
-                MenuItemFileName.Header = Properties.Resources.MenuItemFileName;
-                NewFWLabel.Header = Properties.Resources.NewFWLabel;
-                DebugLabel.Header = Properties.Resources.DebugLabel;
-                MenuItemExitName.Header = Properties.Resources.MenuItemExitName;
-                MenuItemOptionsName.Header = Properties.Resources.MenuItemOptionsName;
+                //                           
+//                MenuItemFileName.Header = Properties.Resources.MenuItemFileName;
+//                NewFWLabel.Header = Properties.Resources.NewFWLabel;
+//                DebugLabel.Header = Properties.Resources.DebugLabel;
+//                MenuItemExitName.Header = Properties.Resources.MenuItemExitName;
+//                MenuItemOptionsName.Header = Properties.Resources.MenuItemOptionsName;
+                MenuItemFileName.Header = Dome_Control.Resources.Strings.MenuItemFileName;
+                NewFWLabel.Header = Dome_Control.Resources.Strings.NewFWLabel;
+                DebugLabel.Header = Dome_Control.Resources.Strings.DebugLabel;
+                MenuItemExitName.Header = Dome_Control.Resources.Strings.MenuItemExitName;
+                MenuItemOptionsName.Header = Dome_Control.Resources.Strings.MenuItemOptionsName;
+
                 //COM_Options.Header = Properties.Resources.MenuItem_COM_Options;
                 //GraphOptions.Header = Properties.Resources.MenuItem_Graph_Options;
                 //PID_Options.Header = Properties.Resources.MenuItem_PID_Options;
-                HelpMenuItemName.Header = Properties.Resources.MenuItemHelpName;
-                HelpMenu.Header = Properties.Resources.MenuItemHelpName;
-                AboutItem.Header = Properties.Resources.MenuItemHelpAbout;
+//                HelpMenuItemName.Header = Properties.Resources.MenuItemHelpName;
+//                HelpMenu.Header = Properties.Resources.MenuItemHelpName;
+//                AboutItem.Header = Properties.Resources.MenuItemHelpAbout;
+                HelpMenuItemName.Header = Dome_Control.Resources.Strings.MenuItemHelpName;
+                HelpMenu.Header = Dome_Control.Resources.Strings.MenuItemHelpName;
+                AboutItem.Header = Dome_Control.Resources.Strings.MenuItemHelpAbout;
                 //
                 //  GUI Tabs
                 //                
                 //  Set the Control Tab Label
-                ControlTab.Header = Properties.Resources.ControlTabDef;
+//                ControlTab.Header = Properties.Resources.ControlTabDef;
+                ControlTab.Header = Dome_Control.Resources.Strings.ControlTabDef;
                 //  Set the Manual Tab Label
-                RunTab.Header = Properties.Resources.RunTabDef;
+//                RunTab.Header = Properties.Resources.RunTabDef;
+                RunTab.Header = Dome_Control.Resources.Strings.RunTabDef;
                 //  Get the Debug Tab Label
-                DebugTabDef = Properties.Resources.DebugTabDef;                
+//                DebugTabDef = Properties.Resources.DebugTabDef;
+                DebugTabDef = Dome_Control.Resources.Strings.DebugTabDef;
                 //  Get the COM Port List Label
-                COMPort_Label.Content = Properties.Resources.ConnectionGroup_Label;
+//                COMPort_Label.Content = Properties.Resources.ConnectionGroup_Label;
+                COMPort_Label.Content = Dome_Control.Resources.Strings.ConnectionGroup_Label;
                 //  Get the Connection Box Label
-                Connection_Box.Header = Properties.Resources.ConnectionGroup_Label;
+//                Connection_Box.Header = Properties.Resources.ConnectionGroup_Label;
+                Connection_Box.Header = Dome_Control.Resources.Strings.ConnectionGroup_Label;
                 //  Get the AVR Connection Button Label
 //                AVRConnectButton.Content = Properties.Resources.Button_Connect;
-                Connected_Label = Properties.Resources.Button_Connect;
+//                Connected_Label = Properties.Resources.Button_Connect;
+                Connected_Label = Dome_Control.Resources.Strings.Button_Connect;
                 //  Get the AVR Disconnection Button Label
-                Disconnected_Label = Properties.Resources.Button_Disconnect;
+//                Disconnected_Label = Properties.Resources.Button_Disconnect;
+                Disconnected_Label = Dome_Control.Resources.Strings.Button_Disconnect;
                 //  Get the Telescome Connection Button Label
-                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+//                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+                ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Connect;
                 //  Get Telescope/Dome Labels
-                DomePositionLabel.Content = Properties.Resources.DomePositionLabel;
-                TelescopeLabel.Content = Properties.Resources.TelescopeLabel;
-                AngleDiffLabel.Content = Properties.Resources.AngleDiffLabel;
-                SyncCheckBox.Content = Properties.Resources.DomeSyncLabel;
+//                DomePositionLabel.Content = Properties.Resources.DomePositionLabel;
+//                TelescopeLabel.Content = Properties.Resources.TelescopeLabel;
+//                AngleDiffLabel.Content = Properties.Resources.AngleDiffLabel;
+//                SyncCheckBox.Content = Properties.Resources.DomeSyncLabel;
+                DomePositionLabel.Content = Dome_Control.Resources.Strings.DomePositionLabel;
+                TelescopeLabel.Content = Dome_Control.Resources.Strings.TelescopeLabel;
+                AngleDiffLabel.Content = Dome_Control.Resources.Strings.AngleDiffLabel;
+                SyncCheckBox.Content = Dome_Control.Resources.Strings.DomeSyncLabel;
                 //  Get the Control Mode Label
                 //CntMode_GroupBox.Header = Properties.Resources.ControlMode_Label;
                 ////  Get the Manual Control Mode Label
