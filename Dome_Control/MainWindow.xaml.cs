@@ -19,6 +19,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Xml.Linq;
+using System.Windows.Markup;
+using System.Collections.Specialized;
+using System.Xml;
+using System.Xml.XPath;
 //using ASCOM_Telescope_ns;
 using ASCOM.Arduino;
 using Arduino.Dome;
@@ -35,6 +39,10 @@ namespace Dome_Control
     public partial class MainWindow : Window
     {
 
+        #region Constants
+        private string[] _languages = { "English", "Français", "Italiano" };
+        #endregion
+
         #region Members
 
         private Angle position { get; set; }
@@ -42,11 +50,11 @@ namespace Dome_Control
         public Dome _dome;
         private uint moveStep { get; set; }
         private string revisionString = "0.1";
-        private bool isArduino;
-        private bool isArduinoBootloader;
-        private string AVRBootLoader_COM;
+        public bool isArduino { get; set; }
+        public bool isArduinoBootloader { get; set; }
+        public string AVRBootLoader_COM { get; set; }
         private bool isAuto = false;
-        private bool _arduinoDebugMode;
+        public bool _arduinoDebugMode {get; set; } // = false;
         private uint TelescopeCheckInterval_s = 1;
         private int SleewingSleepTime = 100;
         //private uint _motor_accel_time = 5;
@@ -72,6 +80,7 @@ namespace Dome_Control
         private bool SingleLeftButtonPressed = false;
         private bool SingleRightButtonPressed = false;
         private string configFilename;
+        private string RXbuffer;
 
         #endregion
 
@@ -97,7 +106,15 @@ namespace Dome_Control
 
         public MainWindow()
         {
-            InitializeComponent();
+            ////  Force the language to english
+            //CultureInfo culture = new CultureInfo("us-US");
+            //if (culture != null)
+            //{
+            //    Thread.CurrentThread.CurrentCulture = culture;
+            //    Thread.CurrentThread.CurrentUICulture = culture;
+            //}
+            //FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+            InitializeComponent();            
             //  Setting default Dome HOME position
             _HOME = 0.0;
             //  Setting default slewing state
@@ -389,11 +406,12 @@ namespace Dome_Control
 
         private void Debug_Click(object sender, RoutedEventArgs e)
         {
-            //if (debugWnd == null)
-            {
-                debugWnd = new DebugWindow(this);
-            }
-            debugWnd.Show();
+            ////if (debugWnd == null)
+            //{
+            //    debugWnd = new DebugWindow(this);
+            //}
+            //debugWnd.Show();
+            MainTab.SelectedIndex = 2;
         }
 
         /// <summary>
@@ -595,7 +613,7 @@ namespace Dome_Control
                 //
                 //  Check if Dome is already connected
                 //
-                if (ASCOMConnectButton.Content.Equals(Dome_Control.Resources.Strings.Button_Connect)) //Properties.Resources.Button_Connect))
+                if (ASCOMConnectButton.Content.Equals(Dome_Control.Resources.Strings.Button_Connect)) 
                 {
                     //  Connect the AVR
                     //
@@ -604,6 +622,13 @@ namespace Dome_Control
                     if (_dome == null)
                     {
                         _dome = new Dome();
+                    }
+                    if (_dome._arduino == null || _dome._telescope == null)
+                    {
+                        //  put the unused dome object to the garbage collector 
+                        //_dome.Dispose();
+                        _dome = null;
+                        return;
                     }
                     _dome.motor_accelleration_time = (uint)MotorSpeed.Value;
                     _dome.dome_gear_ratio = (double)GearRatio.Value;
@@ -638,7 +663,8 @@ namespace Dome_Control
                     {
                         ver += tokens[i + j] + " ";
                     }
-                    //  Show the AVR Firmware0 version into a message box
+                    ver += "\n" + Dome_Control.Resources.Strings.DomeConnectionLabel + _dome._telescope.Name;
+                    //  Show the AVR Firmware version into a message box
                     System.Windows.MessageBox.Show(ver, "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     //
                     //  Display the Control Tab into the GUI
@@ -690,7 +716,9 @@ namespace Dome_Control
                 //_telescope = new ASCOM_Telescope();
                 //ErrDlg("Telescope: " + Telescope.geetDeclination().ToString(), new Exception());
 //                ASCOMConnectButton.Content = Properties.Resources.Button_Disconnect;
-                ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Disconnect;
+                ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Connect;
+                // Display a message box stating that the dome is disconnected
+//                System.Windows.MessageBox.Show("Insert a string here", "Information", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
@@ -919,11 +947,24 @@ namespace Dome_Control
         {
             try
             {
+                System.Windows.MessageBoxResult result = System.Windows.MessageBox.Show(Dome_Control.Resources.Strings.MsgStopWarning,
+                    "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 //if (_status == Status.TURN_LEFT || _status == Status.TURN_RIGHT)
+                if (result == MessageBoxResult.Yes)
                 {
                     //_dome.Stop();
                     _dome.AbortSlew();
                     _status = Status.NO_TURN;
+                    SyncCheckBox.IsChecked = false;
+                    _dome.UnsyncToAzimuth();
+                    if (SingleLeftButtonPressed)
+                    {
+                        SingleLeftButtonPressed = false;
+                    }
+                    if (SingleRightButtonPressed)
+                    {
+                        SingleRightButtonPressed = false;
+                    }
                 }
             }
             catch (Exception ex)
@@ -948,8 +989,15 @@ namespace Dome_Control
         {
             if (!this._dome.Slewing)
             {
-                this._dome.UnsyncToAzimuth();
-                this._dome.SlewToAzimuth(_HOME);                
+                System.Windows.MessageBoxResult result = System.Windows.MessageBox.Show(Dome_Control.Resources.Strings.MsgParkWarning, "Warning",
+                    System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    this._dome.UnsyncToAzimuth();
+                    this._dome.SlewToAzimuth(_HOME);
+                    this.SyncCheckBox.IsChecked = false;
+                    //this._dome.UnsyncToAzimuth();
+                }
             }
             else
             {
@@ -959,7 +1007,182 @@ namespace Dome_Control
 
         private void DebugMode_Click(object sender, RoutedEventArgs e)
         {
-
+            //MainTab.SelectedIndex = 2;
+            //if (_arduinoDebugMode) _arduinoDebugMode = false;
+            //else _arduinoDebugMode = true;
+            //System.Windows.MessageBox.Show("Inserisci il comando di debug per arduino");
+            try
+            {
+                if (_arduinoDebugMode)
+                {
+                    if (!_dome._arduino.clearArduinoDebugMode())
+                    {
+                        throw new Exception(Dome_Control.Resources.Strings.ErrClearingDebugMode);
+                    }
+                    _arduinoDebugMode = false;                    
+                }
+                else
+                {
+                    if (!_dome._arduino.setArduinoDebugMode())
+                    {
+                        throw new Exception(Dome_Control.Resources.Strings.ErrSetDebugMode);
+                    }
+                    _arduinoDebugMode = true;
+                }
+                DebugMode_MenuItem_CB.IsChecked = _arduinoDebugMode;
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("", ex);
+            }
         }
+
+        private void DebugIN_TextBox_TextChanged(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                int i = DebugIN_TextBox.LineCount;
+                if (DebugIN_TextBox.LineCount != 1)
+                {
+                    StringCollection lines = new StringCollection();
+                    int count = DebugIN_TextBox.LineCount - 1;
+                    for (int j = 0; j < count; j++)
+                    {
+                        lines.Add(DebugIN_TextBox.GetLineText(j));
+                    }
+                    string cmd = DebugIN_TextBox.GetLineText(count - 1);
+                    string res;
+                    try
+                    {
+                        try
+                        {
+                            //res = _dome._arduino._avr.getCOMData();
+                            _dome._arduino._avr.Send(cmd);
+                            Thread.Sleep(10);
+                            res = _dome._arduino._avr.getCOMData();
+                            DebugOUT_TextBox.Text += res;// +"AVR> ";
+                            //RXbuffer += res + "AVR>";
+                            DebugOut.ScrollToBottom();
+                        }
+                        catch
+                        {
+                            DebugOUT_TextBox.Text += "Error receiving command\n";
+                        }
+                    }
+                    catch
+                    {
+                        DebugOUT_TextBox.Text += "Error receiving command\n";
+                    }
+                    DebugIN_TextBox.ScrollToEnd();
+                }
+            }
+        }
+
+        private void DebugMode_MenuItem_CB_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_arduinoDebugMode)
+                {
+                    if (!_dome._arduino.clearArduinoDebugMode())
+                    {
+                        throw new Exception(Dome_Control.Resources.Strings.ErrClearingDebugMode);
+                    }
+                    _arduinoDebugMode = false;
+                }
+                else
+                {
+                    if (!_dome._arduino.setArduinoDebugMode())
+                    {
+                        throw new Exception(Dome_Control.Resources.Strings.ErrSetDebugMode);
+                    }
+                    _arduinoDebugMode = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("", ex);
+            }
+
+        }        
+
+        private void Options_Click(object sender, RoutedEventArgs e)
+        {
+            MainTab.SelectedIndex = 1;
+        }
+
+        private void LoadConfigButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //
+                // Read the Configuration file
+                //
+                System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
+                dlg.Filter = Dome_Control.Resources.Strings.ConfigLabel;
+                System.Windows.Forms.DialogResult result = dlg.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    configXml = dlg.FileName;
+                    if (File.Exists(configXml))
+                    {
+                        // Development Version
+                        ReadConfiguration();
+                    }
+
+                    configFilename = configXml;
+                    //
+                    //  Using XML for language
+                    //
+                    //  UpdateDialogs();
+                    //
+                    //  Using Resources for language
+                    //
+                    UpdateGUI();                    
+                }                                
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("Error Reading Configurations\n", ex);
+            }
+        }
+
+        private void SaveConfigButton_Click(object sender, RoutedEventArgs e)
+        {
+            //ErrDlg("Crea codice di salvataggio config", new Exception());
+            System.Windows.Forms.SaveFileDialog dlg = new System.Windows.Forms.SaveFileDialog();
+            //dlg.Filter = "Xml File (*.xml)|*.xml|All files (*.*)|*.*";
+            dlg.Filter = Dome_Control.Resources.Strings.ConfigLabel;
+            System.Windows.Forms.DialogResult result = dlg.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                string filename = dlg.FileName;
+                XmlDocument doc = createXmlConfig();
+                doc.Save(filename);
+            }
+        }
+
+        private void ArduinoBootloader_CB_Click(object sender, RoutedEventArgs e)
+        {
+            isArduinoBootloader = (bool)ArduinoBootloader_CB.IsChecked;
+        }
+
+        private void BootloaderCOM_Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AVRBootLoader_COM = BootloaderCOM_Combo.SelectedValue.ToString();
+        }
+
+        private void updateCfgButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _dome.configureFirmware();
+            }
+            catch (Exception ex)
+            {
+                ErrDlg(Dome_Control.Resources.Strings.Error_ReadConfFile, ex);
+            }
+        }
+
     }
 }

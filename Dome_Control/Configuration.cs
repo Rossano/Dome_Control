@@ -697,8 +697,12 @@ namespace Dome_Control
                 MenuItemFileName.Header = Dome_Control.Resources.Strings.MenuItemFileName;
                 NewFWLabel.Header = Dome_Control.Resources.Strings.NewFWLabel;
                 DebugLabel.Header = Dome_Control.Resources.Strings.DebugLabel;
+                DebugMode.Header = Dome_Control.Resources.Strings.MenuItemDebugConsole;
                 MenuItemExitName.Header = Dome_Control.Resources.Strings.MenuItemExitName;
                 MenuItemOptionsName.Header = Dome_Control.Resources.Strings.MenuItemOptionsName;
+                languageItem.Header = Dome_Control.Resources.Strings.LanguageUILabel;
+                DebugMode.Header = Dome_Control.Resources.Strings.DebugMode;
+                Options.Header = Dome_Control.Resources.Strings.MenuItemOptions;
 
                 //COM_Options.Header = Properties.Resources.MenuItem_COM_Options;
                 //GraphOptions.Header = Properties.Resources.MenuItem_Graph_Options;
@@ -720,7 +724,7 @@ namespace Dome_Control
                 RunTab.Header = Dome_Control.Resources.Strings.RunTabDef;
                 //  Get the Debug Tab Label
 //                DebugTabDef = Properties.Resources.DebugTabDef;
-                DebugTabDef = Dome_Control.Resources.Strings.DebugTabDef;
+                DebugTab.Header = Dome_Control.Resources.Strings.DebugTabDef;
                 //  Get the COM Port List Label
 //                COMPort_Label.Content = Properties.Resources.ConnectionGroup_Label;
                 COMPort_Label.Content = Dome_Control.Resources.Strings.ConnectionGroup_Label;
@@ -734,9 +738,20 @@ namespace Dome_Control
                 //  Get the AVR Disconnection Button Label
 //                Disconnected_Label = Properties.Resources.Button_Disconnect;
                 Disconnected_Label = Dome_Control.Resources.Strings.Button_Disconnect;
-                //  Get the Telescome Connection Button Label
-//                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
-                ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Connect;
+                //  Save/Load Config Button Labels
+                LoadConfigButton.Content = Dome_Control.Resources.Strings.LoadConfigButtonLabel;
+                SaveConfigButton.Content = Dome_Control.Resources.Strings.SaveConfigButtonLabel;
+                //  Bootloader Elements
+                BootloaderCOM_Label.Content = Dome_Control.Resources.Strings.BootloaderCOMLabel;
+                //  Fill the ComboBox
+                for (int i = 1; i < 100; i++)
+                {
+                    BootloaderCOM_Combo.Items.Add(string.Format("COM{0}", i));
+                }
+
+                    //  Get the Telescome Connection Button Label
+                    //                ASCOMConnectButton.Content = Properties.Resources.Button_Connect;
+                    ASCOMConnectButton.Content = Dome_Control.Resources.Strings.Button_Connect;
                 //  Get Telescope/Dome Labels
 //                DomePositionLabel.Content = Properties.Resources.DomePositionLabel;
 //                TelescopeLabel.Content = Properties.Resources.TelescopeLabel;
@@ -780,6 +795,80 @@ namespace Dome_Control
             {
                 ErrDlg(Properties.Resources.Error_UpdateGUI, ex);
             }
+        }
+
+        XmlDocument createXmlConfig()
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml("<config></config>");
+            doc.PrependChild(doc.CreateXmlDeclaration("1.0", "UTF-8", ""));
+
+            //XmlNode config = doc.CreateElement("config");
+            //doc.AppendChild(config);
+            XmlNode config = doc.GetElementsByTagName("config")[0];
+
+            XmlElement AVR = doc.CreateElement("AVR");
+            config.AppendChild(AVR);
+            XmlElement COM = doc.CreateElement("COM");
+            AVR.AppendChild(COM);
+            XmlElement baud = doc.CreateElement("Baudrate");
+            AVR.AppendChild(baud);
+            XmlElement databits = doc.CreateElement("Databits");
+            AVR.AppendChild(databits);
+            XmlElement stopbit = doc.CreateElement("Stopbits");
+            AVR.AppendChild(stopbit);
+            XmlElement parity = doc.CreateElement("Parity");
+            AVR.AppendChild(parity);
+            XmlElement handshake = doc.CreateElement("Handshake");
+            AVR.AppendChild(handshake);
+            XmlElement arduitoBootloader = doc.CreateElement("Arduino_Bootloader");
+            AVR.AppendChild(arduitoBootloader);
+            XmlElement bootloaderCOM = doc.CreateElement("Arduino_Bootloader_COM");
+            AVR.AppendChild(bootloaderCOM);
+
+            XmlElement lang = doc.CreateElement("Language");
+            config.AppendChild(lang);
+
+            XmlElement dome = doc.CreateElement("Dome");
+            config.AppendChild(dome);
+            XmlElement accel = doc.CreateElement("accel_time");
+            dome.AppendChild(accel);
+            XmlElement speed = doc.CreateElement("angular_speed_rpm");
+            dome.AppendChild(speed);
+            XmlElement thsld = doc.CreateElement("Threshold");
+            dome.AppendChild(thsld);
+
+            XmlElement encoder = doc.CreateElement("Encoder");
+            config.AppendChild(encoder);
+            XmlElement type = doc.CreateElement("type");
+            encoder.AppendChild(type);
+            XmlElement res = doc.CreateElement("resolution");
+            encoder.AppendChild(res);
+            XmlElement gearRatio = doc.CreateElement("gear_ratio");
+            encoder.AppendChild(gearRatio);
+            XmlElement pos = doc.CreateElement("LastPosition");
+            encoder.AppendChild(pos);
+
+            COM.InnerText = AVR_COM_Name;
+            baud.InnerText = AVR_COM_Baudrate.ToString();
+            databits.InnerText = AVR_COM_Databits.ToString();
+            stopbit.InnerText = AVR_COM_Stopbits.ToString();
+            parity.InnerText = AVR_COM_Parity.ToString();
+            handshake.InnerText = AVR_COM_Handshake.ToString();
+            arduitoBootloader.InnerText = isArduinoBootloader.ToString();
+            bootloaderCOM.InnerText = AVRBootLoader_COM;
+
+            lang.InnerText = language;
+
+            type.InnerText = "Incremental";
+            res.InnerText = this.EncoderRes.Value.ToString();
+            gearRatio.InnerText = this.GearRatio.Value.ToString();
+            pos.InnerText = _dome.Azimuth.ToString();
+            accel.InnerText = MotorAccelleration.Value.ToString();
+            speed.InnerText = MotorSpeed.Value.ToString();
+            thsld.InnerText = this.Threshold.Value.ToString();
+
+            return doc;
         }
 
         #endregion

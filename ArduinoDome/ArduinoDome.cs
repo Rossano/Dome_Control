@@ -34,7 +34,7 @@ namespace Arduino.Dome
     /// <summary>
     /// Peltier Objcet
     /// </summary>
-    public class ArduinoDome
+    public class ArduinoDome: IDisposable
     {
         #region Constants
         // 
@@ -117,6 +117,10 @@ namespace Arduino.Dome
             /// Command to respond to an ACK request
             /// </summary>
             public static string getAck = "get_ACK";
+            /// <summary>
+            /// Command ro respond to a debug command
+            /// </summary>
+            public static string debug = "debug";
         }
 
         #endregion
@@ -301,6 +305,8 @@ namespace Arduino.Dome
             //  Instantiate the semaphore
             AVRSemaphore = new Semaphore(1, 1, "AVR Semaphore");
        }
+
+        public void Dispose() { }
 
         #endregion
 
@@ -1195,6 +1201,32 @@ namespace Arduino.Dome
             catch
             {
                 return false;
+            }
+        }
+
+        public bool setArduinoDebugMode()
+        {
+            string cmd = BuildArduinoCommand(DomeCommands.debug, " FULL");
+            try
+            {
+                return SendCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool clearArduinoDebugMode()
+        {
+            string cmd = BuildArduinoCommand(DomeCommands.debug, " OFF");
+            try
+            {
+                return SendCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
         }
 

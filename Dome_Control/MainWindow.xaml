@@ -7,8 +7,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"                  
         xmlns:wpfx="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:res="clr-namespace:Dome_Control.Resources"
+        Name="MainWin"
         SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Icon="/Dome_Control;component/images/ARA3.ico">
     <!-- Command Binding Definition for Custom commands -->
+  
     <Window.CommandBindings>
         <!-- Help Command Binding-->
         <CommandBinding Command="Help" Executed="Help_Executed" />
@@ -47,7 +49,7 @@
         <ImageBrush x:Key="RightArrowImage" ImageSource="/images/RightArrow.png" />-->
     </Window.Resources>
 
-    <Grid Height="Auto">
+    <Grid Height="Auto">        
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition MinWidth="450" />
@@ -69,10 +71,17 @@
             </MenuItem>
             <!-- Options Menu -->
             <MenuItem Header="Item 2" Name="MenuItemOptionsName" x:Uid="MenuItemOptionsName">
-                <StackPanel>
-                    <MenuItem Name="DebugMode" x:Uid="DebugMode" Click="DebugMode_Click"/>
-                    <CheckBox IsChecked="{Binding Path=_arduinoDebugMode}" Name="DebugMode_MenuItem_CB" />
+                <MenuItem Name="languageItem" x:Uid="languageItem">
+                    <MenuItem Name="EnglishUI" Header="English"/>
+                    <MenuItem Name="FrenchUI" Header="Français" />
+                    <MenuItem Name="ItalianUI" Header="Italiano"/>
+                </MenuItem>
+                <StackPanel Orientation="Horizontal">                    
+                    <MenuItem Name="DebugMode" x:Uid="DebugMode" Click="DebugMode_Click" HorizontalAlignment="Left"/>
+                    <CheckBox IsChecked="False" Name="DebugMode_MenuItem_CB" IsEnabled="False" HorizontalAlignment="Center" Click="DebugMode_MenuItem_CB_Click"/>
+                    <!--{Binding Source=_arduinoDebugMode}-->
                 </StackPanel>
+                <MenuItem Name="Options" x:Uid="Options" Click="Options_Click" />
                 <!--<MenuItem Header="Item 2.1" Name="COM_Options" x:Uid="COM_Options" Click="COM_Option_Executed"/>-->
                 <!--Command="COM_Options" />-->
                 <!--<MenuItem Header="Item 2.2" Name="GraphOptions" x:Uid="GraphOptions" Click="GraphOptions_Click"/>
@@ -198,8 +207,20 @@
                         </GroupBox>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                             <Label Name="EncoderDebuglabel" x:Uid="EncoderDebugLabel" Content="Encoder Debug" Margin="5"/>
-                            <CheckBox IsChecked="False"  Click="DebugMode_Click" Margin="5" VerticalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding ElementName=MainWin, Path=_arduinoDebugMode}"  Click="DebugMode_Click" Margin="5" VerticalAlignment="Center"/>
                         </StackPanel>
+                        <GroupBox Header="Arduino Bootloader" Margin="5">
+                            <StackPanel Orientation="Vertical" Margin="10">
+                                <CheckBox Name="ArduinoBootloader_CB" x:Uid="ArduinoBootloader_CB" Margin="5" Click="ArduinoBootloader_CB_Click" Content="Arduino Bootloader" 
+                                          IsChecked="{Binding ElementName=MainWin, Path=isArduinoBootloader}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Name="BootloaderCOM_Label" x:Uid="BootloaderCOM_Label" Content="COM" />
+                                    <ComboBox Name="BootloaderCOM_Combo" x:Uid="BootloaderCOM_Combo" Margin="5" SelectionChanged="BootloaderCOM_Combo_SelectionChanged" Width="80"  HorizontalAlignment="Right"
+                                              SelectedItem="{Binding ElementName=MainWin, Path=AVRBootloader_COM}">                                        
+                                    </ComboBox>
+                                </StackPanel>                                
+                            </StackPanel>
+                        </GroupBox>                        
                     </StackPanel>
                     <GroupBox Name="Connection_Box" MinWidth="200" MinHeight="450" Grid.Column="1">
                         <StackPanel Margin="5" Orientation="Vertical" Height="Auto" >
@@ -250,31 +271,44 @@
                                         </StackPanel>
                                     </GroupBox>
                                 </StackPanel>                                
-                            </StackPanel>                                                        
+                            </StackPanel>          
+                            <StackPanel Orientation="Vertical" Margin="5">
+                                <Button Name="LoadConfigButton" x:Uid="LoadConfigButton" Content="Load Config" Click="LoadConfigButton_Click" Margin="10"/>
+                                <Button Name="SaveConfigButton" x:Uid="SaveConfigBUtton" Content="Save Config" Click="SaveConfigButton_Click" Margin="10 "/>                               
+                            </StackPanel>
+                            <Button Name="updateCfgButton" x:Uid="updateCfg" Content="Update Config" Click="updateCfgButton_Click" Margin="10" />
                         </StackPanel>
                     </GroupBox>
                 </Grid>
                 
             </TabItem>
-            <!--<TabItem Name="TunTab" Grid.Row="1" MinHeight="450"> 
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical" MinWidth="300">
-                        <StackPanel Orientation="Horizontal" Width="300">
-                            <Label Name="PositionLabel" Width="100"/>    
-                            <Label Name="DomePosition" Width="100" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Width="300">
-                            <Label Name="TelescopeLabel" Width="100" />
-                            <Label Name="TelescopePos" Width="100" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Width="300">
-                            <Label Name="AngleDiffLabel" Width="100" />
-                            <Label Name="AngleDiff" Width="100" />
-                        </StackPanel>
+            <TabItem Name="DebugTab">
+                <StackPanel Orientation="Vertical">
+                    <GroupBox Margin="5" Header="Arduino -> PC">
+                        <ScrollViewer Name="DebugOut" VerticalScrollBarVisibility="Visible">
+                            <TextBox Name="DebugOUT_TextBox" x:Uid="DebubOUT_TextBox" MinHeight="180" Background="Black" Foreground="#FF007F00" 
+                                   MaxHeight="250" Text="{Binding Path=RXbuffer}" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+                        </ScrollViewer>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="PC -> Arduino">
+                        <ScrollViewer Name="DebugIn" VerticalScrollBarVisibility="Visible">
+                            <TextBox MinHeight="180" Name="DebugIN_TextBox" x:Uid="DebugIN_TextBox" Background="Black" Foreground="#FF007F00"  
+                                 MaxHeight="250" AcceptsReturn="True" KeyUp="DebugIN_TextBox_TextChanged" VerticalScrollBarVisibility="Auto"/>    
+                        </ScrollViewer>
+                        
+                        <!-- -->
+                        <!--DragEnter="DebugOUT_TextBox_DragEnter"-->
+                    </GroupBox>
+                    <StackPanel Orientation="Horizontal">
+                        <Label>Debug Mode</Label>
+                        <ComboBox>
+                            <ComboBoxItem>None</ComboBoxItem>
+                            <ComboBoxItem>Simple</ComboBoxItem>
+                            <ComboBoxItem>Full</ComboBoxItem>
+                        </ComboBox>
                     </StackPanel>
-                    
-                </StackPanel>            
-            </TabItem>-->
+                </StackPanel>
+            </TabItem>
         </TabControl>
         <StatusBar Height="30" Name="MainWindowStatusBar" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,0">
             <StatusBar.ItemsPanel>
@@ -292,10 +326,10 @@
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
             <StatusBarItem Grid.Column="0">
-                <Image Margin="10,5,10,10" Name="ConnectionImage" x:Uid="ConnectionImage" Stretch="Uniform" />
+                <Image Margin="10,5,10,10" Name="ConnectionImage" x:Uid="ConnectionImage" Stretch="Uniform" MinHeight="35" />
             </StatusBarItem>
             <StatusBarItem Grid.Column="1">
-                <Label Name="ConnectionStatusLabel" x:Uid="StatusBar_Disconneted" MinHeight="30" Content="Test"/>
+                <Label Name="ConnectionStatusLabel" x:Uid="StatusBar_Disconneted" MinHeight="30" Content="Test" FontSize="12"/>
             </StatusBarItem>
             <StatusBarItem Grid.Column="2" >
                 <Border >

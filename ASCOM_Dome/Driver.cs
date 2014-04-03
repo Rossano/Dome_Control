@@ -170,7 +170,15 @@ namespace ASCOM.Arduino
             tl.Enabled = traceState;
             tl.LogMessage("Doem", "Starting Dome");
             tl.LogMessage("Dome", "Setting Chooser Form");
-            SetupDialog();
+            try
+            {
+                SetupDialog();
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Cancel")) return;
+                else throw ex;
+            }
 
             tl.LogMessage("Dome", "Starting initialisation");
             
@@ -235,6 +243,11 @@ namespace ASCOM.Arduino
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     WriteProfile(); // Persist device configuration values to the ASCOM Profile store
+                }
+                else
+                {
+                    //  This is a workaroundto implement the cancel option return from the dialog
+                    throw new NullReferenceException("SetupDialog Cancel");
                 }
             }
         }
@@ -472,8 +485,19 @@ namespace ASCOM.Arduino
         {
             get
             {
+                bool positionOK = false;
+                int count = 10;
                 tl.LogMessage("Azimuth Get", _position.ToString());
-                _position = _arduino.DomePosition;
+                do
+                {
+                    try
+                    {
+                        _position = _arduino.DomePosition;
+                        positionOK = true;
+                    }
+                    catch { }
+                }
+                while (!positionOK && (--count != 0));
                 return _position;
                 //return _arduino.DomePosition;
                 //throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
@@ -805,7 +829,18 @@ namespace ASCOM.Arduino
             if(_telescope.Slewing == false && IsSlewing == false)
             //if (!IsSlewing)
             {
-                _position = _arduino.DomePosition;
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        _position = _arduino.DomePosition;
+                        break;
+                    }
+                    catch 
+                    {
+                        if (i == 10) throw new Exception("Error getting Azimuth");
+                    }
+                }
                 Angle theta = _position * 360 / encoder_resolution / dome_gear_ratio;
                 if (Synced)
                 {

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
   <AVR>
-    <COM>COM18</COM>
+    <COM>COM3</COM>
     <Baudrate>57600</Baudrate>
     <Databits>8</Databits>
     <Stopbits>One</Stopbits>
@@ -21,6 +21,6 @@
     <type>incremental</type>
     <resolution>100</resolution>
     <gear_ratio>80</gear_ratio>
-    <LastPosition>7427</LastPosition>
+    <LastPosition>3647</LastPosition>
   </Encoder>
 </config>
