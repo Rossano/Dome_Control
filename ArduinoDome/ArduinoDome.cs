@@ -118,9 +118,13 @@ namespace Arduino.Dome
             /// </summary>
             public static string getAck = "get_ACK";
             /// <summary>
-            /// Command ro respond to a debug command
+            /// Command to respond to a debug command
             /// </summary>
             public static string debug = "debug";
+            /// <summary>
+            /// Command setting the encoder polarity
+            /// </summary>
+            public static string encoderPol = "encoder_pol";
         }
 
         #endregion
@@ -165,6 +169,7 @@ namespace Arduino.Dome
 #if USE_SINGLE_QUEUE
         private Queue<string> avrResult;                //  FIFO storing the Strings received from AVR
 #endif        
+        public int encoderDirection = 1;
 
         #endregion
 
@@ -1113,6 +1118,11 @@ namespace Arduino.Dome
         {
             try
             {
+                if (encoderDirection == -1)
+                {
+                    if (dir == Direction.ANTICLOCWISE) dir = Direction.CLOCKWISE;
+                    else dir = Direction.ANTICLOCWISE;
+                }
                 string cmd;
                 //  First check in which direction to turn and build the Arduino FW command
                 if (dir == Direction.CLOCKWISE)
@@ -1204,9 +1214,9 @@ namespace Arduino.Dome
             }
         }
 
-        public bool setArduinoDebugMode()
+        public bool setArduinoDebugMode(string mode)
         {
-            string cmd = BuildArduinoCommand(DomeCommands.debug, " FULL");
+            string cmd = BuildArduinoCommand(DomeCommands.debug, mode);
             try
             {
                 return SendCommand(cmd);
@@ -1220,6 +1230,48 @@ namespace Arduino.Dome
         public bool clearArduinoDebugMode()
         {
             string cmd = BuildArduinoCommand(DomeCommands.debug, " OFF");
+            try
+            {
+                return SendCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool get_encoder_pol()
+        {
+            string cmd = BuildArduinoCommand(DomeCommands.encoderPol);
+            try
+            {
+                if (SendCommand(cmd))
+                {
+                    string result = avrResult.Dequeue();
+                    if (result.Contains("POS")) encoderDirection = 0;
+                    if (result.Contains("NEG")) encoderDirection = 1;
+                    return true;
+                    //char[] separators={'\n', '\r'};
+                    //string[] strs = result.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+                    //foreach (string s in strs)
+                    //{
+                    //    if
+                    //}
+                }
+                else return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool set_encoder_pol(uint pol)
+        {
+            string args = "";
+            if(pol == 0) args="POS";
+            else if (pol ==1) args="NEG";
+            string cmd = BuildArduinoCommand(DomeCommands.encoderPol, args);
             try
             {
                 return SendCommand(cmd);

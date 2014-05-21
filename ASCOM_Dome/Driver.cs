@@ -99,7 +99,7 @@ namespace ASCOM.Arduino
         private double _position;
         private bool Parked;
         private double ParkPosition;
-        private bool IsSlewing;
+        private bool IsSlewing;        
         private System.Windows.Threading.DispatcherTimer DomeTimer;
         private BackgroundWorker slewThread = new BackgroundWorker();
         /// <summary>

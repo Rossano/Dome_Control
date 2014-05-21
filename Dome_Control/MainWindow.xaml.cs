@@ -57,6 +57,7 @@ namespace Dome_Control
         public bool _arduinoDebugMode {get; set; } // = false;
         private uint TelescopeCheckInterval_s = 1;
         private int SleewingSleepTime = 100;
+        private int encoderDirection = 1;
         //private uint _motor_accel_time = 5;
         //private uint _motor_rpm = 1400;
         //private uint _enc_resolution;
@@ -119,6 +120,8 @@ namespace Dome_Control
             _HOME = 0.0;
             //  Setting default slewing state
             _status = Status.NO_TURN;
+            //  Setting default debug mode
+            _arduinoDebugMode = false;
             try
             {
                 //
@@ -1023,7 +1026,7 @@ namespace Dome_Control
                 }
                 else
                 {
-                    if (!_dome._arduino.setArduinoDebugMode())
+                    if (!_dome._arduino.setArduinoDebugMode("FULL"))//ON"))
                     {
                         throw new Exception(Dome_Control.Resources.Strings.ErrSetDebugMode);
                     }
@@ -1092,7 +1095,7 @@ namespace Dome_Control
                 }
                 else
                 {
-                    if (!_dome._arduino.setArduinoDebugMode())
+                    if (!_dome._arduino.setArduinoDebugMode("ON"))
                     {
                         throw new Exception(Dome_Control.Resources.Strings.ErrSetDebugMode);
                     }
@@ -1164,7 +1167,7 @@ namespace Dome_Control
 
         private void ArduinoBootloader_CB_Click(object sender, RoutedEventArgs e)
         {
-            isArduinoBootloader = (bool)ArduinoBootloader_CB.IsChecked;
+            isArduinoBootloader = (bool)ArduinoBootloader_CB.IsChecked;            
         }
 
         private void BootloaderCOM_Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1181,6 +1184,44 @@ namespace Dome_Control
             catch (Exception ex)
             {
                 ErrDlg(Dome_Control.Resources.Strings.Error_ReadConfFile, ex);
+            }
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                var index = sender as ComboBox;
+                switch (index.SelectedIndex)
+                {
+                    case 0: _dome._arduino.clearArduinoDebugMode(); break;
+                    case 1: _dome._arduino.setArduinoDebugMode("FULL"); break;
+                    case 2: _dome._arduino.setArduinoDebugMode("ON"); break;
+                    default: throw new Exception("Debug mode choice not valid");
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrDlg("Error in Debuf combobox", ex);
+            }
+        }
+
+        private void RadioButton_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as RadioButton;
+            string content = (string)button.Content;
+            if (_dome == null) return;
+            if (content.Equals("Normal"))
+            {
+                encoderDirection = 1;
+                _dome._arduino.encoderDirection = 1;
+                _dome._arduino.set_encoder_pol(0);
+            }
+            else if (content.Equals("Inverted"))
+            {
+                encoderDirection = -1;
+                _dome._arduino.encoderDirection = -1;
+                _dome._arduino.set_encoder_pol(1);
             }
         }
 
