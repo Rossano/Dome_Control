@@ -9,7 +9,98 @@ using System.IO;
 
 namespace Dome_Control
 {
-    class LogGenerator
+	public class XlsWriter
+	{
+		
+		#region constants
+		
+		private ushort[] clBegin = {0x0809, 8, 0, 0x10, 0, 0};
+		private ushort[] clEnd = {0x0A, 00};
+		
+		#endregion
+		
+		#region Fields
+		
+		private Stream _stream;
+		private BinaryWriter _writer;
+	
+		#endregion
+		
+		#region Constructor
+		
+		public ExcelWriter(Stream stream)
+		{
+			_stream = stream;
+			_writer = new BinaryWriter(_stream);
+		}
+		
+		#endregion
+		
+		#region Methods
+		
+		private void WriteUshortArray (ushort[] val)
+		{
+			for(int i=0; i<val.Length; i++)
+			{
+				_writer.Write(val[i]);
+			}
+		}
+		
+		public void WriteCell (int row, int col)
+		{
+			ushort[] clData = {0x0201, 6, 0, 0, 0x017};
+			clData[2] = (ushort)row;
+			clData[3] = (ushort)col;
+			WriteUshortArray(clData);
+		}
+		
+		public void WriteCell (int row, int col, string val)
+		{
+			ushort[] clData = {0x0204, 0, 0, 0, 0, 0};
+			int iLen = val.Length;
+			byte[] plainText = Encoding.ASCII.GetBytes(val);
+			clData[1] = (ushort)(8 + iLen);
+			clData[2] = (ushort)row;
+			clData[3] = (ushort)col;
+			clData[5] = (ushort)iLen;
+			WriteUshortArray(clData);
+			_writer.Write(plainText);
+		}
+		
+		public void WriteCell (int row, int col, int val)
+		{
+			ushort[] clData = {0x027E, 10, 0, 0, 0};
+			clData[2] = (ushort)row;
+			clData[3] = (ushort)col;
+			WriteUshortArray(clData);
+			int iValue = (val << 2) | 2;
+			_writer.Write(iValue);
+		}
+		
+		public void WriteCell(int row, int col, double val)
+		{
+			ushort[] clData = {0x0203, 14, 0, 0, 0};
+			clData[2] = (ushort)row;
+			clData[3] = (ushort)col;
+			WriteUshortArray(clData);
+			_writer.Write(val);			
+		}
+		
+		public void BeginWrite()
+		{
+			WriteUshortArray(clBegin);			
+		}
+		
+		public void EndWrite()
+		{
+			WriteUshortArray(clEnd);
+			_writer.Flush();
+		}
+		
+		#endregion
+	}
+		
+    public class LogGenerator
     {
         private string path;                        //  spreadsheet path
         private string name;                        //  spreadsheet filename

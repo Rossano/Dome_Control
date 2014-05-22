@@ -82,7 +82,11 @@ namespace Dome_Control
         private bool SingleRightButtonPressed = false;
         private string configFilename;
         private string RXbuffer;
-
+		private FileStream _log;
+		private LogGenerator _logWriter;
+		private DateTime T0;
+		private uint LastLogLine = 0;
+		
         #endregion
 
         /// <summary>
@@ -182,6 +186,7 @@ namespace Dome_Control
             mainTimer.Tick += mainTimer_Tick;
             mainTimer.Stop();
             StartTime = Environment.TickCount;
+            T0 = DateTime.Now;
             try
             {
                 ConnectionImage.Source = new BitmapImage(new Uri(@"./images/DisconnectedImg.png", UriKind.Relative));
@@ -225,6 +230,7 @@ namespace Dome_Control
         {
             long pos;
             double foo = 0;
+            DateTime elapsed = DateTime.Now - T0;
             //  Gets the Telescope/Dome position and plots them
             try
             {
@@ -259,7 +265,30 @@ namespace Dome_Control
                 ConnectionStatusLabel.Content = Disconnected_Label;
                 ErrDlg("Error: AVR disconnected", new Exception());
                 mainTimer.Stop();                
-            }            
+            } 
+			//	Generate Log information and update log files
+			if(this.LogCheckBox.IsChecked == true)
+			{
+				string addr = "A" + LastLogLine.ToString();
+				string elapsedStr = string.Format("{0:hh-mm-ss}", elapsed);
+				_logWriter.upDateValue("Dome LOG", addr, elapsedStr, 0, true);
+				addr = "B" + LastLogLine.ToString();
+				_logWriter.upDateValue("Dome LOG", addr, TelescopePos.Content, 0, true);
+				addr = "C" + LastLogLine.ToString();
+				_logWriter.upDateValue("Dome LOG", addr, 360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value, 0, false);
+				addr = "D" + LastLogLine.ToString();
+				_logWriter.upDateValue("Dome LOG", addr, AngleDiff.Content, 0, true);
+				int _status;
+				switch (Status) 
+				{
+					case Status.TURN_LEFT: _status = -1; break;
+					case Status.TURN_RIGHT: _status = 1; break;
+					default: _status = 0; break;
+				}
+				addr = "E" + LastLogLine.ToString();
+				_logWriter.upDateValue("Dome LOG", addr, _status, 0, false);
+				LastLogLine++;
+			}
         }
 
         /// <summary>
@@ -579,6 +608,10 @@ namespace Dome_Control
         /// <param name="e">The <see cref="ExecutedRoutedEventArgs"/> instance containing the event data.</param>
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+        	if(_log != null) 
+        	{
+        		_log.Close();
+        	}
             System.Windows.Application.Current.Shutdown();
         }
 
@@ -608,7 +641,15 @@ namespace Dome_Control
         {
 
         }
-
+		
+        private void StartLog()
+        {
+        	DateTime now = DateTime.Now;
+        	string logFile = string.Format("Dome_Log_{0:yyyy-mm-dd_hh-mm}.xlsx", now);
+        	_log = new FileStream(logFile, FileMode.OpenOrCreate);
+        	_logWriter = new LogGenerator(_log);        	
+        }
+        
         private void ASCOMConnectButton_Click(object sender, RoutedEventArgs e)
         {
             try

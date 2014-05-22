@@ -870,6 +870,11 @@ namespace Dome_Control
 
             return doc;
         }
+        
+		void LogCheckBox_Click(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
 
         #endregion
 

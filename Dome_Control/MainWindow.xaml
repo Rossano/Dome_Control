@@ -159,6 +159,8 @@
                             <Label Name="SlewingIndicatorLabel" x:Uid="SlewingIndicatorLabel" Content="Slewing" />
                             <Image Name="SlewingLight" Margin="5" x:Uid="SlewingLight" Height="20" Width="20" Source="file:///C:/Users/Ross/Documents/Visual%20Studio%202010/Projects/Dome_Control/Dome_Control/images/Circle_Red.png"/>
                         </StackPanel>
+                		<CheckBox Name="LogCheckBox" x:Uid="LogCheckLob" Content="Generate Log File" IsChecked="True" Click="LogCheckBox_Click" Margin="5"/>
+                		
                     </StackPanel>                    
                 </StackPanel>
             </TabItem>
