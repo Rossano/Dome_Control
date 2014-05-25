@@ -230,7 +230,7 @@ namespace Dome_Control
         {
             long pos;
             double foo = 0;
-            DateTime elapsed = DateTime.Now - T0;
+            TimeSpan elapsed = DateTime.Now - T0;
             //  Gets the Telescope/Dome position and plots them
             try
             {
@@ -271,22 +271,22 @@ namespace Dome_Control
 			{
 				string addr = "A" + LastLogLine.ToString();
 				string elapsedStr = string.Format("{0:hh-mm-ss}", elapsed);
-				_logWriter.upDateValue("Dome LOG", addr, elapsedStr, 0, true);
+				_logWriter.upDateValue("Dome LOG", addr, elapsedStr, 0, false);
 				addr = "B" + LastLogLine.ToString();
-				_logWriter.upDateValue("Dome LOG", addr, TelescopePos.Content, 0, true);
+				_logWriter.upDateValue("Dome LOG", addr, TelescopePos.Content.ToString(), 0, false);
 				addr = "C" + LastLogLine.ToString();
-				_logWriter.upDateValue("Dome LOG", addr, 360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value, 0, false);
+				_logWriter.upDateValue("Dome LOG", addr, Convert.ToString(360 * foo / (int)EncoderRes.Value / (int)GearRatio.Value), 0, false);
 				addr = "D" + LastLogLine.ToString();
-				_logWriter.upDateValue("Dome LOG", addr, AngleDiff.Content, 0, true);
-				int _status;
-				switch (Status) 
+				_logWriter.upDateValue("Dome LOG", addr, AngleDiff.Content.ToString(), 0, false);
+				int status;
+				switch (_status) 
 				{
-					case Status.TURN_LEFT: _status = -1; break;
-					case Status.TURN_RIGHT: _status = 1; break;
-					default: _status = 0; break;
+					case Status.TURN_LEFT: status = -1; break;
+					case Status.TURN_RIGHT: status = 1; break;
+					default: status = 0; break;
 				}
 				addr = "E" + LastLogLine.ToString();
-				_logWriter.upDateValue("Dome LOG", addr, _status, 0, false);
+				_logWriter.upDateValue("Dome LOG", addr, _status.ToString(), 0, false);
 				LastLogLine++;
 			}
         }
@@ -646,8 +646,8 @@ namespace Dome_Control
         {
         	DateTime now = DateTime.Now;
         	string logFile = string.Format("Dome_Log_{0:yyyy-mm-dd_hh-mm}.xlsx", now);
-        	_log = new FileStream(logFile, FileMode.OpenOrCreate);
-        	_logWriter = new LogGenerator(_log);        	
+        	//_log = new FileStream(logFile, FileMode.OpenOrCreate);
+        	_logWriter = new LogGenerator(logFile); //_log);        	
         }
         
         private void ASCOMConnectButton_Click(object sender, RoutedEventArgs e)
