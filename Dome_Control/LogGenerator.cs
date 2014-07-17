@@ -5,6 +5,7 @@ using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Extensions;
 using System.IO;
 
 namespace Dome_Control
@@ -16,7 +17,8 @@ namespace Dome_Control
 		
 		private ushort[] clBegin = {0x0809, 8, 0, 0x10, 0, 0};
 		private ushort[] clEnd = {0x0A, 00};
-		
+        private string wsName = "Dome_LOG";
+
 		#endregion
 		
 		#region Fields
@@ -109,6 +111,7 @@ namespace Dome_Control
 		private WorksheetPart wsSheet = null;       //  WorkSheetPart
 		private Sheets sheets = null;               //  Spreasheet sheets
 		private Sheet sheet = null;                 //  Spreadsheet active sheet
+        private string wsName = "Dome_LOG";
 
 		public LogGenerator(string fn)
 		{
@@ -148,10 +151,11 @@ namespace Dome_Control
 				//
 				//  Append new sheet and associate it with the workbook
 				//
-				sheet = new Sheet() { Id = doc.WorkbookPart.GetIdOfPart(wsSheet), SheetId = 1, Name = "oi_th" };
+				sheet = new Sheet() { Id = doc.WorkbookPart.GetIdOfPart(wsSheet), SheetId = 1, Name = wsName };
 				sheet.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
-				sheets.Append(sheet);            
-				
+				sheets.Append(sheet);
+
+                wbPart.Workbook.Save();
 				//CreatePackage(fn);
 
 				//if (File.Exists(fn))
@@ -444,6 +448,244 @@ namespace Dome_Control
 			}
 			return update;
 		}
+    }
 
-	}
+
+
+        /// <summary>
+        /// Description of LogReport.
+        /// </summary>
+        public class XlsxDocument
+        {
+            #region Members
+
+            private string _filename;
+            private SpreadsheetDocument _doc;
+            private MemoryStream _stream;
+            private WorksheetReader _reader;
+            private WorksheetWriter _writer;
+            private WorksheetPart wsPart;
+            private string[] wsNames = { "Sheet1", "Sheet2", "Sheet3" };
+
+            #endregion
+
+            #region Constructors
+
+            public XlsxDocument()
+            {
+                _filename = "default.xlsx";
+                try
+                {
+                    Create(_filename);
+                }
+                catch (Exception ex)
+                {
+
+                    throw ex;
+                }
+            }
+
+            public XlsxDocument(string fn)
+            {
+
+                try
+                {
+                    if (!File.Exists(fn))
+                    {
+                        _filename = fn;
+                        this.Create(_filename);
+                    }
+                    else
+                    {
+                        throw new FileLoadException("File already exists");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+
+            #endregion
+
+            #region Public Methods
+
+            public void setCell(string cell, string val)
+            {
+                try
+                {
+                    _writer.PasteText(cell, val);
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public void setCell(string cell, int val)
+            {
+                try
+                {
+                    _writer.PasteNumber(cell, val.ToString());
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public void setCell(string cell, double val)
+            {
+                try
+                {
+                    _writer.PasteNumber(cell, val.ToString());
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public void setCell(string cell, DateTime val)
+            {
+                try
+                {
+                    _writer.PasteDate(cell, val);
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public string getCellAsText(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    return val.CellValue.ToString();
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public Nullable<int> getCellAsInt(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    try
+                    {
+                        int res = Convert.ToInt32(val.CellValue);
+                        return res;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public Nullable<long> getCellAsLong(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    try
+                    {
+                        long res = Convert.ToInt64(val.CellValue);
+                        return res;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public Nullable<double> getCellAsDouble(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    try
+                    {
+                        double res = Convert.ToDouble(val.CellValue);
+                        return res;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public Nullable<DateTime> getCellAsDateTime(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    try
+                    {
+                        DateTime res = Convert.ToDateTime(val.CellValue);
+                        return res;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public object getCell(string col, uint row)
+            {
+                try
+                {
+                    Cell val = WorksheetReader.GetCell(col, row, wsPart);
+                    return (object)val.CellValue;
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+
+            public void Save()
+            {
+                SpreadsheetWriter.Save(_doc);
+            }
+
+            #endregion
+
+            #region Private Methods
+
+            private void Create(string fn)
+            {
+                _stream = SpreadsheetReader.Create();
+                _doc = SpreadsheetDocument.Open(_stream, true);
+                wsPart = SpreadsheetReader.GetWorksheetPartByName(_doc, wsNames[0]);
+                _writer = new WorksheetWriter(_doc, wsPart);
+                SpreadsheetWriter.Save(_doc);
+            }
+
+            #endregion
+        }
 }

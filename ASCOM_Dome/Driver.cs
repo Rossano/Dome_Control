@@ -1159,7 +1159,7 @@ namespace ASCOM.Arduino
         {
             //  Tell Arduino Driver to turn left and update slewing property
             _arduino.Slew(Direction.ANTICLOCWISE);  
-            IsSlewing = true;
+            IsSlewing = true;            
         }
 
         public void TurnRight()
