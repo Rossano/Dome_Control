@@ -32,6 +32,16 @@ namespace Arduino.Dome
     } ;
 
     /// <summary>
+    /// Enumerator data structure to define the debug modes
+    /// </summary>
+    public enum DebugMode
+    {
+        NO_DEBUG,                                       //  No debug
+        FULL_DEBUG,                                     //  Full path debug
+        LIGHT_DEBUG                                     //  Debug using timer only
+    }
+
+    /// <summary>
     /// Peltier Objcet
     /// </summary>
     public class ArduinoDome: IDisposable
@@ -1280,6 +1290,66 @@ namespace Arduino.Dome
             {
                 throw ex;
             }
+        }
+
+        public bool set_debug_mode(DebugMode mode)
+        {
+            string cmd = BuildArduinoCommand(DomeCommands.debug);
+            switch(mode)
+            {
+                case DebugMode.NO_DEBUG: cmd = string.Concat(cmd, " OFF"); break;
+                case DebugMode.LIGHT_DEBUG: cmd = string.Concat(cmd, " FULL"); break;
+                case DebugMode.FULL_DEBUG: cmd = string.Concat(cmd, " ON"); break;                
+            }
+            try
+            {
+                return SendCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public DebugMode get_debug_mode()
+        {
+            string cmd = BuildArduinoCommand(DomeCommands.debug);
+            try
+            {
+                if (SendCommand(cmd))
+                {
+                    string result = avrResult.Dequeue();
+                    if (result.ToLower().Contains("full"))
+                    {
+                        return DebugMode.FULL_DEBUG;
+                    }
+                    else if (result.ToLower().Contains("on"))
+                    {
+                        return DebugMode.LIGHT_DEBUG;
+                    }
+                    else if (result.ToLower().Contains("off"))
+                    {
+                        return DebugMode.NO_DEBUG;
+                    }
+                    else
+                    {
+                        throw new ArgumentOutOfRangeException("Bad debug mode");
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("Bad debug command");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public string getArduinoPortName()
+        {
+            return _avr.getPortName();
         }
 
         #endregion

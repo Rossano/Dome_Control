@@ -197,7 +197,7 @@ namespace ASCOM.Arduino
             Parked = true;
             ParkPosition = 0.0;
             IsSlewing = false;
-            Threshold = 10.0;
+            Threshold = 2.0;
             connectedState = false;
 //            Braking = 0.0;
             DomeTimer = new System.Windows.Threading.DispatcherTimer();
@@ -732,7 +732,7 @@ namespace ASCOM.Arduino
             //}
             Angle thetaAngle = theta;
             Angle AzimuthAngle = Azimuth;
-            if ((thetaAngle - AzimuthAngle) <= (AzimuthAngle - thetaAngle))
+            if ((thetaAngle - AzimuthAngle) >= (AzimuthAngle - thetaAngle))
             {
                 tl.LogMessage("SlewToAzimuth", "Slewing ANTICLOCKWISE");
                 _arduino.Slew(Direction.ANTICLOCWISE);
@@ -879,15 +879,15 @@ namespace ASCOM.Arduino
             double[] args = (double[])e.Argument;
             //  Gets the argument in local variable
             double azimuth = args[0];
-            double braking = args[1];
+            double braking = Math.Max(args[1], 10);
             //  Slewing loop
             //double theta = 360 * _position / encoder_resolution / dome_gear_ratio;            
             double theta = 360 * _arduino.DomePosition / encoder_resolution / dome_gear_ratio;
             //
             //  Coarse Positon Control
             //
-            while(Math.Abs(theta-azimuth) > 10)
-            //while (Math.Abs(theta - azimuth) > braking)
+            // while(Math.Abs(theta-azimuth) > 10)
+            while (Math.Abs(theta - azimuth) > braking)
             {
                 if (worker.CancellationPending == true)
                 {
@@ -1186,6 +1186,11 @@ namespace ASCOM.Arduino
             {
                 throw new Exception("Dome badly configured");
             }
+        }
+
+        public string getArduinoPortName()
+        {
+            return _arduino.getArduinoPortName();
         }
 
         #endregion

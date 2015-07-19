@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AngleDiffLabel" xml:space="preserve">
+    <value>Differenza Angoli</value>
+    <comment>GUI label</comment>
+  </data>
+  <data name="ArduinoDebugMode" xml:space="preserve">
+    <value>Arduino Modo Debug</value>
+    <comment>Enters Arduino in debug mode</comment>
+  </data>
+  <data name="BootloaderCOMLabel" xml:space="preserve">
+    <value>Bootloader COM</value>
+    <comment>Bootloader COM label</comment>
+  </data>
+  <data name="Button_Connect" xml:space="preserve">
+    <value>Connetti</value>
+    <comment>Connect button label</comment>
+  </data>
+  <data name="Button_Disconnect" xml:space="preserve">
+    <value>Disconnetti</value>
+    <comment>Disconnect button label</comment>
+  </data>
+  <data name="CancelDownloadButton" xml:space="preserve">
+    <value>Cancella</value>
+    <comment>Cancel download button label</comment>
+  </data>
+  <data name="ConnectionGroup_Label" xml:space="preserve">
+    <value>Connessione</value>
+  </data>
+  <data name="ContinuousSlewingLabel" xml:space="preserve">
+    <value>Movimento Continuo</value>
+  </data>
+  <data name="ControlTabDef" xml:space="preserve">
+    <value>Controllo</value>
+    <comment>Label for Control Tab</comment>
+  </data>
+  <data name="DebugLabel" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="DebugMode" xml:space="preserve">
+    <value>Debug</value>
+    <comment>Enters debug mode</comment>
+  </data>
+  <data name="DebugTabDef" xml:space="preserve">
+    <value>Debug</value>
+    <comment>Label for the Debug Tab</comment>
+  </data>
+  <data name="DomeConnectionLabel" xml:space="preserve">
+    <value>Cupola connessa al telescopio:</value>
+    <comment>Label to state to which telescope the dome is linked</comment>
+  </data>
+  <data name="DomePositionLabel" xml:space="preserve">
+    <value>Positione Cupola</value>
+    <comment>GUI label</comment>
+  </data>
+  <data name="DomeSyncLabel" xml:space="preserve">
+    <value>Sincronizza Cupola con Telescopio</value>
+  </data>
+  <data name="DownloadButton" xml:space="preserve">
+    <value>Download</value>
+    <comment>Download button label</comment>
+  </data>
+  <data name="ErrClearingDebugMode" xml:space="preserve">
+    <value>Errore Resettando Arduino in Debug Mode</value>
+    <comment>Error Message</comment>
+  </data>
+  <data name="ErrGettingAzimuth" xml:space="preserve">
+    <value>Errore leggendo Azimuth della cupola</value>
+    <comment>Error reading Azimuth</comment>
+  </data>
+  <data name="Error_AVRDUDE" xml:space="preserve">
+    <value>Errore AVRDUDE, impossibile connettersi con avrdude</value>
+    <comment>Error: avrdude fail to connect</comment>
+  </data>
+  <data name="Error_HelpFileNotFound" xml:space="preserve">
+    <value>File di JHelp non Trovato</value>
+    <comment>Error: help file not found</comment>
+  </data>
+  <data name="Error_ReadConfFile" xml:space="preserve">
+    <value>Errorre Leggendo File di Configurazione</value>
+    <comment>Error Msg</comment>
+  </data>
+  <data name="Error_UpdateGUI" xml:space="preserve">
+    <value>Errorre Aggiornando Lingua Interfaccia</value>
+    <comment>Error message</comment>
+  </data>
+  <data name="ErrSetDebugMode" xml:space="preserve">
+    <value>Errore Settando Arduino in Debug Mode</value>
+    <comment>Error Message</comment>
+  </data>
+  <data name="LanguageUILabel" xml:space="preserve">
+    <value>Imposta Lingua</value>
+    <comment>Sets UI language</comment>
+  </data>
+  <data name="LoadConfigButtonLabel" xml:space="preserve">
+    <value>Carica Configurazione</value>
+    <comment>Label for the Load Config Button</comment>
+  </data>
+  <data name="LoadNewFWButton" xml:space="preserve">
+    <value>Carica</value>
+    <comment>Load new FW button label</comment>
+  </data>
+  <data name="LoadNewFWLabel" xml:space="preserve">
+    <value>Carica Nuovo Firmware in Arduino</value>
+    <comment>Load new firmware label</comment>
+  </data>
+  <data name="MenuItemDebugConsole" xml:space="preserve">
+    <value>Terminale di Debug</value>
+    <comment>Label for the Debug Console Menu Item</comment>
+  </data>
+  <data name="MenuItemExitName" xml:space="preserve">
+    <value>Esco</value>
+    <comment>Label for the exit menu voice</comment>
+  </data>
+  <data name="MenuItemFileName" xml:space="preserve">
+    <value>File</value>
+    <comment>Menu Item label</comment>
+  </data>
+  <data name="MenuItemHelpAbout" xml:space="preserve">
+    <value>A proposito</value>
+    <comment>Label for the about menu voice</comment>
+  </data>
+  <data name="MenuItemHelpName" xml:space="preserve">
+    <value>Aiuto</value>
+    <comment>Label for the help menu voice</comment>
+  </data>
+  <data name="MenuItemOptions" xml:space="preserve">
+    <value>Opzioni</value>
+    <comment>Label for the Options Menu Intem</comment>
+  </data>
+  <data name="MenuItemOptionsName" xml:space="preserve">
+    <value>Opzioni</value>
+    <comment>Label for the options menu voice</comment>
+  </data>
+  <data name="MsgParkWarning" xml:space="preserve">
+    <value>Stai per mettere in PARK la cupola, sei sicuro di volern continuare?</value>
+    <comment>Park warning message</comment>
+  </data>
+  <data name="MsgStopWarning" xml:space="preserve">
+    <value>Stai per mettere in STOP la cupola, sei sicuro di voler continuare?</value>
+    <comment>Stop warning message</comment>
+  </data>
+  <data name="NewFWLabel" xml:space="preserve">
+    <value>Nuovo Firmware Arduino</value>
+  </data>
+  <data name="RunTabDef" xml:space="preserve">
+    <value>Modo Attivo</value>
+    <comment>Label for the Run Tab</comment>
+  </data>
+  <data name="SaveConfigButtonLabel" xml:space="preserve">
+    <value>Salva Configurazione</value>
+    <comment>Label for the Save Config Button</comment>
+  </data>
+  <data name="SlewingIndicatorLabel" xml:space="preserve">
+    <value>In Movimento</value>
+    <comment>Label to indicate the slewing state of the dome</comment>
+  </data>
+  <data name="SlewingLabel" xml:space="preserve">
+    <value>Movimento</value>
+  </data>
+  <data name="StatusBar_Connected" xml:space="preserve">
+    <value>Connesso</value>
+    <comment>Statusbar connected label</comment>
+  </data>
+  <data name="StatusBar_Disconnected" xml:space="preserve">
+    <value>Sconnesso</value>
+    <comment>Statusbar disconnected label</comment>
+  </data>
+  <data name="StepSlewingLabel" xml:space="preserve">
+    <value>Movimento a Passi</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value />
+  </data>
+  <data name="TelescopeLabel" xml:space="preserve">
+    <value>Posizione Telescopio</value>
+    <comment>GUILabel</comment>
+  </data>
+  <data name="ConfigLabel" xml:space="preserve">
+    <value>Xml File (*.xml)|*.xml|All files (*.*)|*.*</value>
+    <comment>GUI Label</comment>
+  </data>
+</root>

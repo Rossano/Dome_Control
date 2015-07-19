@@ -213,11 +213,11 @@
                         </GroupBox>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                             <Label Name="EncoderDebuglabel" x:Uid="EncoderDebugLabel" Content="Encoder Debug" Margin="5"/>
-                            <CheckBox IsChecked="False"  Click="DebugMode_Click" Margin="5" VerticalAlignment="Center"/> <!--IsChecked="{Binding ElementName=MainWin, Path=_arduinoDebugMode}"-->
+                            <CheckBox IsChecked="False"  Name="EncoderDebug_CheckBox" Click="DebugMode_Click" Margin="5" VerticalAlignment="Center"/> <!--IsChecked="{Binding ElementName=MainWin, Path=_arduinoDebugMode}"-->
                         </StackPanel>
                         <GroupBox Header="Arduino Bootloader" Margin="5">
                             <StackPanel Orientation="Vertical" Margin="10">
-                                <CheckBox Name="ArduinoBootloader_CB" x:Uid="ArduinoBootloader_CB" Margin="5" Click="ArduinoBootloader_CB_Click" Content="Arduino Bootloader" 
+                                <CheckBox Name="ArduinoBootloader_CB" x:Uid="ArduinoBootloader_CB" Margin="5" Click="ArduinoBootloader_CB_Click" Content="AVR109 Bootloader" 
                                           IsChecked="{Binding ElementName=MainWin, Path=isArduinoBootloader}"/>
                                 <StackPanel Orientation="Horizontal">
                                     <Label Name="BootloaderCOM_Label" x:Uid="BootloaderCOM_Label" Content="COM" />
