@@ -70,9 +70,23 @@ namespace TestDomeAlgMove
         [TestMethod()]
         public void SetupDialogFormConstructorTest()
         {
-            Dome parent = null; // TODO: Initialize to an appropriate value
+            Dome parent = this; //null; // TODO: Initialize to an appropriate value
             SetupDialogForm target = new SetupDialogForm(parent);
-            Assert.Inconclusive("TODO: Implement code to verify target");
+            //Assert.Inconclusive("TODO: Implement code to verify target");*
+            try {
+            	var result = target.ShowDialog();
+            	if (result == System.Windows.Forms.DialogResult.OK) 
+            	{
+            		Assert.IsTrue(true, "Test SetupDialogForm PASS");
+            	}
+            }
+            catch (NullReferenceException ex) {
+            	Assert.IsTrue(true, "Test SetupDialogForm OK press Cancel");
+            }
+            catch (Exception) {
+            	
+            	Assert.Fail();
+            }
         }
 
         /// <summary>
@@ -86,8 +100,14 @@ namespace TestDomeAlgMove
             SetupDialogForm_Accessor target = new SetupDialogForm_Accessor(param0); // TODO: Initialize to an appropriate value
             object sender = null; // TODO: Initialize to an appropriate value
             EventArgs e = null; // TODO: Initialize to an appropriate value
-            target.BrowseToAscom(sender, e);
-            Assert.Inconclusive("A method that does not return a value cannot be verified.");
+            try {
+            	target.BrowseToAscom(sender, e);            	
+            }
+            catch (Exception) {
+            	Assert.Fail("Launch ASCOM Browser Fail");
+            }
+            Assert.IsTrue(true, "Launch ASCOM browser Pass");
+            //Assert.Inconclusive("A method that does not return a value cannot be verified.");
         }
 
         /// <summary>

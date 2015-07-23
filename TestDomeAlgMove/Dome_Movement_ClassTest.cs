@@ -82,14 +82,57 @@ namespace TestDomeAlgMove
         [TestMethod()]
         public void find_rotation_senseTest()
         {
-            double cur_pos = 0F; // TODO: Initialize to an appropriate value
-            Dome_Movement_Class target = new Dome_Movement_Class(cur_pos); // TODO: Initialize to an appropriate value
-            double target1 = 0F; // TODO: Initialize to an appropriate value
-            Status expected = new Status(); // TODO: Initialize to an appropriate value
-            Status actual;
-            actual = target.find_rotation_sense(target1);
-            Assert.AreEqual(expected, actual);
-            Assert.Inconclusive("Verify the correctness of this test method.");
+//            double cur_pos = 0F; // TODO: Initialize to an appropriate value
+//            Dome_Movement_Class target = new Dome_Movement_Class(cur_pos); // TODO: Initialize to an appropriate value
+//            double target1 = 0F; // TODO: Initialize to an appropriate value
+//            Status expected = new Status(); // TODO: Initialize to an appropriate value
+//            Status actual;
+//            actual = target.find_rotation_sense(target1);
+//            Assert.AreEqual(expected, actual);
+//            Assert.Inconclusive("Verify the correctness of this test method.");			
+			for (int i=0; i<9; i++)
+			{
+				Randon rnd = new Random();
+				double cur_pos = rnd.NextDouble() * 360;
+				double target_pos = rnd.NextDouble() * 360;
+				Status actual;
+				Status expected;
+				Dome_Movement_Class target = new Dome_Movement_Class(cur_pos);
+				actual = target.find_rotation_sense(target_pos);
+				
+				double theta = target_pos;
+				int left = 0;
+				int right = 0;
+				
+				while (Math.Abs(thetha - cur_pos) > 10.0)
+				{
+					if (theta > 350)
+					{
+						theta += 10.0 - 360;
+					}
+					else {
+						theta += 10.0;
+					}
+					left++;
+				}
+				while (Math.Abs(cur_pos - theta) > 10.0)
+				{
+					if (theta < 10.0)
+					{
+						theta -= 360 - theta;
+					}
+					else {
+						theta -= 10.0;
+					}
+					right++;
+				}
+				
+				if(left == right) expected = Status.NO_TURN;
+				else if (left > right) expected = Status.TURN_RIGHT;
+				else expected = Status.TURN_LEFT;
+				
+				Assert.AreEqual(expected, actual);
+			}
         }
 
         /// <summary>
